@@ -13,6 +13,9 @@ output/
 high_throughput/data
 high_throughput/generated
 
+#.idea (Pycharm folder)
+.idea
+
 # Distribution / packaging
 .Python
 build/
