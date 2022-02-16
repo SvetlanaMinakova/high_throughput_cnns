@@ -1,0 +1,3 @@
+## Code for scientific paper Combining Task- and Data-level Parallelism for High-Throughput CNN Inference on Embedded CPUs-GPUs MPSoCs"
+### authors: Svetlana Minakova, Erqian Tang, and Todor Stefanov
+paper published In Proc. "20th International Conference on Embedded Computer Systems: Architectures, Modeling and Simulation (SAMOS'20)", pp. 18-35, Pythagoreio, Samos Island, Greece, July 05-09, 2020. "

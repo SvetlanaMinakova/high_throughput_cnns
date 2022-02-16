@@ -1,0 +1,9 @@
+{
+  "name": "alexnet",
+  "tasks": ["l_0_1_2","l_3","l_4_5_6","l_7","l_8_9","l_10_11","l_12_13","l_14_15","l_16_17_18","l_19_20_21","l_22","l_23"],
+  "tasks_num": 12,
+  "tasks_adjacent_list": [[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[]],
+  "tasks_reverse_adjacent_list": [[],[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]],
+  "tasks_out_comm_cost": [279936,64896,173056,36864,55296,55296,36864,9216,4096,4096,1000,1000],
+  "jobs_per_task": [["conv0","activation1","normalization2"],["pool3"],["conv4","activation5","normalization6"],["pool7"],["conv8","activation9"],["conv10","activation11"],["conv12","activation13"],["pool14","skip15"],["gemm16","activation17","skip18"],["gemm19","activation20","skip21"],["gemm22"],["softmax23"]]
+}

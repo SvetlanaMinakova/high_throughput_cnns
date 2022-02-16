@@ -1,0 +1,12 @@
+{
+  "epochs": 10000,
+  "population_start_size": 5000,
+  "selection_percent": 66,
+  "mutation_probability": 0.05,
+  "mutation_percent":5,
+  "max_no_improvement_epochs":150,
+  "eval_communication_costs": true,
+  "verbose": false,
+  "preferred_proc_id":5,
+  "preset_preferred_proc_probability":0.9
+}
