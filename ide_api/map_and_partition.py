@@ -33,7 +33,7 @@ def run_single_onnx():
 
     # EXAMPLE 2: greedy mapping with throughput evaluation based on measurements on the platform
     """
-    measurements_path = str(os.path.join(inp_files_directory, "eval.json"))
+    measurements_path = str(os.path.join(inp_files_directory, "eval_template.json"))
     mapping = map_and_partition(dnn, architecture, output_dir=outp_files_directory,
                                 eval_type="measurements", eval_path=measurements_path, map_algo="greedy")
     """
@@ -45,7 +45,7 @@ def run_single_onnx():
 
     # EXAMPLE 4: GA-based mapping with throughput evaluation based on measurements on the platform
 
-    measurements_path = str(os.path.join(inp_files_directory, "eval.json"))
+    measurements_path = str(os.path.join(inp_files_directory, "eval_template.json"))
     ga_config_path = str(os.path.join(inp_files_directory, "ga_conf.json"))
     mapping = map_and_partition(dnn, architecture, output_dir=outp_files_directory, 
                                 eval_type="measurements", eval_path=measurements_path,

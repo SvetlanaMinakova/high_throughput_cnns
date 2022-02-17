@@ -14,11 +14,7 @@ def main():
     sys.path.append(this_dir)
 
     # import project modules
-    from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
-    from converters.dnn_to_task_graph import dnn_to_task_graph, dnn_to_task_graph_with_built_in
-    from models.dnn_model.dnn import set_built_in
-    from models.dnn_model.transformation.ops_fusion import fuse_built_in
-    from util import get_project_root, print_stage
+    from util import print_stage
     from converters.json_converters.json_to_architecture import json_to_architecture
     from converters.json_converters.json_task_graph import parse_app_graph_json
     from fileworkers.json_fw import save_as_json
@@ -73,7 +69,7 @@ def main():
 
         stage = "Save template as .json"
         print_stage(stage, verbose)
-        eval_path = str(os.path.join(output_dir, "eval.json"))
+        eval_path = str(os.path.join(output_dir, "eval_template.json"))
         save_as_json(eval_path, template_as_dict)
 
     except Exception as e:

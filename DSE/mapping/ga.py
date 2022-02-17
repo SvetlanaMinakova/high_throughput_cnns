@@ -114,7 +114,7 @@ class GA:
 
             if self.verbose:
                 print("EPOCH: ", cur_epoch, "epoch best time: ", cur_time, "GA best time: ", best_time)
-                print("population ", self.population.__len__(), "time direct_measurements: ", self.time_evals.__len__())
+                print("population size:", self.population.__len__())# "time evals num: ", self.time_evals.__len__())
 
             if improved:
                 no_improvement_epochs = 0

@@ -36,7 +36,7 @@ def run_metafiles_folder():
         sub_folder_path = str(os.path.join(inp_files_directory, sub_folder_name))
         dnn_name = sub_folder_name
         task_graph_path = str(os.path.join(sub_folder_path, "task_graph.json"))
-        eval_path = str(os.path.join(sub_folder_path, "eval.json"))
+        eval_path = str(os.path.join(sub_folder_path, "eval_template.json"))
         ga_conf_path = str(os.path.join(inp_files_directory, "ga_conf_generic.json"))
         if all_inputs_present(task_graph_path, eval_path, ga_conf_path):
             increase_dnn_throughput(dnn_name, architecture, task_graph_path, eval_path, ga_conf_path)

@@ -24,7 +24,3 @@ def print_info():
 
 def supported_dnn_extensions():
     return [".onnx", ".h5"]
-
-
-def quantization_options():
-    return ['default', 'float16', 'int', 'all', 'none']

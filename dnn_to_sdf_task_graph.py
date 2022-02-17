@@ -38,11 +38,6 @@ def main():
                              '1) a path to an .onnx file; '
                              '2) a path to .h5 file (cnn in format of Keras DL framework). ')
 
-    # platform is not needed for this conversion
-    """
-    parser.add_argument('-p', metavar='--platform', type=str, action='store', required=True,
-                        help='path to edge platform (architecture) description, saved in .json format')
-    """
     parser.add_argument('-fo', metavar='--fused-ops', type=str, action='store',
                         default='activation,normalization,arithmetic,skip',
                         help='List built-in (fused) operators within a cnn. A cnn layers, performing a built-in'
@@ -65,7 +60,6 @@ def main():
     try:
         # Extract parameters from command-line arguments"
         cnn_path = args.cnn
-        # platform_path = args.p
         output_dir = args.o
         silent = args.silent
         verbose = not silent
@@ -85,13 +79,6 @@ def main():
             print_stage(stage, verbose)
             set_built_in(dnn, fused_ops)
             fuse_built_in(dnn)
-
-        # platform is not needed for this conversion
-        """
-        stage = "Reading target platform architecture"
-        print_stage(stage, verbose)
-        architecture = json_to_architecture(platform_path)
-        """
 
         stage = "Converting DNN-> Task graph (SDF) model"
         print_stage(stage, verbose)

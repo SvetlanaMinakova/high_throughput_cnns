@@ -66,7 +66,7 @@ def map_and_partition(dnn,
     mapping = get_mapping(dnn_task_graph, architecture, eval_table, map_algo, ga_conf_path, verbose)
 
     # save mapping as a .json file
-    mapping_to_json(dnn, architecture, mapping, output_dir, verbose)
+    mapping_to_json(dnn_task_graph, architecture, mapping, output_dir, verbose)
 
     # --------------
     # get partitioning
