@@ -47,7 +47,7 @@ def increase_dnn_throughput(dnn, architecture, built_in_ops, ga_conf_path=None, 
     accelerator_id = max(accelerator_id, 0)
 
     # sequential execution on one processor
-    seq_mapping = map_sequential(len(dnn_task_graph.tasks), len(architecture.processors), accelerator_id)
+    seq_mapping = map_sequential(len(dnn_task_graph.tasks), len(architecture.src_and_dst_processor_types), accelerator_id)
     lat_ms_sequential = eval_latency_sequential(eval_table, architecture, seq_mapping)
     thr_fps_sequential = lat_ms_to_thr_fps(lat_ms_sequential)
 
@@ -94,7 +94,7 @@ def increase_dnn_throughput(dnn, architecture, built_in_ops, ga_conf_path=None, 
     print("*********************************************************************")
     print("model latency reduction (model =", dnn.name, ") : ")
     print()
-    print(" - layer-by-layer on", architecture.processors[accelerator_id])
+    print(" - layer-by-layer on", architecture.src_and_dst_processor_types[accelerator_id])
     print("      latency: ", round(lat_ms_sequential, 2), "; throughput: ", round(thr_fps_sequential, 2), "fps")
     # print()
     print(" - greedy pipeline:")

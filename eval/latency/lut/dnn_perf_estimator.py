@@ -82,7 +82,7 @@ def estimate_perf_pipeline(app_graph, architecture, time_eval_matrix, gpu_id):
     # build pipeline schedule/mapping
     greedy_pipeline_mapping = map_greedy_pipeline(app_graph, architecture, time_eval_matrix, gpu_id)
     total_time = 0.0
-    for proc_id in range(len(architecture.processors)):
+    for proc_id in range(len(architecture.src_and_dst_processor_types)):
         proc_type_id = architecture.get_proc_type_id(proc_id)
         proc_time = get_sum_proc_time(time_eval_matrix, greedy_pipeline_mapping[proc_id], proc_type_id)
         total_time = max(total_time, proc_time)
@@ -105,7 +105,7 @@ def estimate_perf_sequential(app_graph, architecture, time_eval_matrix, gpu_id):
     greedy_sequential_mapping = map_greedy_sequenatial(app_graph, architecture, time_eval_matrix, gpu_id)
 
     total_time = 0.0
-    for proc_id in range(len(architecture.processors)):
+    for proc_id in range(len(architecture.src_and_dst_processor_types)):
         proc_type_id = architecture.get_proc_type_id(proc_id)
         proc_time = get_sum_proc_time(time_eval_matrix, greedy_sequential_mapping[proc_id], proc_type_id)
         total_time += proc_time

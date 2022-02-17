@@ -1,4 +1,5 @@
 import json
+import os
 
 
 def read_json(abs_path):
@@ -19,6 +20,8 @@ def save_as_json(abs_path, data_json, pretty_printing=True):
     :param pretty_printing: make .json printing pretty
     :param data_json json string to be written into the file
     """
+    # create parent directory for file, if it doesn't exist
+    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
 
     with open(abs_path, 'w') as f:
         if pretty_printing:

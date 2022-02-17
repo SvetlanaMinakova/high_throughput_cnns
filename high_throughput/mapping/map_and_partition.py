@@ -1,4 +1,5 @@
 import os.path
+from util import print_stage
 
 
 def supported_throughput_eval_types():
@@ -208,8 +209,3 @@ def get_partitioning(dnn, dnn_task_graph, mapping):
     from dnn_partitioning.after_mapping.partition_dnn_with_mapping import partition_dnn_with_task_graph_and_mapping
     partitions, connections = partition_dnn_with_task_graph_and_mapping(dnn, dnn_task_graph, mapping)
     return partitions, connections
-
-
-def print_stage(stage: str, verbose):
-    if verbose:
-        print("STAGE:", stage)

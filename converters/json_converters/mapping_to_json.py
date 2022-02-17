@@ -20,7 +20,7 @@ def mapping_to_json(dnn, architecture, mapping, output_dir, verbose):
     mapping_as_dict = {}
     # meta-data
     layers = dnn.get_layers()
-    processors = architecture.processors
+    processors = architecture.src_and_dst_processor_types
 
     for proc_id in range(len(processors)):
         proc_name = processors[proc_id]

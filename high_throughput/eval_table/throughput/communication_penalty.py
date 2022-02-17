@@ -21,19 +21,16 @@ def get_processor_communication_penalty(proc_id,
     # communication penalty in milliseconds (ms)
     communication_penalty = 0.0
     proc_tasks = mapping[proc_id]
-    proc_type_id = architecture.get_proc_type_id(proc_id)
-    proc_type = architecture.processors_types[proc_type_id]
 
     for proc_task in proc_tasks:
-        # penalty for writing on other processors
+        # penalty for writing to other processors
         proc_tasks_outs = app_graph.tasks_adjacent_list[proc_task]
         for out in proc_tasks_outs:
             # out-task (task, receiving data from proc_task)
             # is mapped on a different processor
             if out not in proc_tasks:
                 out_processor_id = get_task_processor_id(mapping, out)
-                out_proc_type = architecture.get_proc_type_id(out_processor_id)
-                bandwidth = architecture.get_communication_speed_mb_s(proc_type, out_proc_type)
+                bandwidth = architecture.get_communication_speed_mb_s(proc_id, out_processor_id)
                 tokens = app_graph.tasks_out_comm_cost[proc_task]
                 outp_write_penalty = get_memory_access_penalty_ms(tokens, token_bytes, bandwidth)
                 communication_penalty += outp_write_penalty
@@ -45,8 +42,7 @@ def get_processor_communication_penalty(proc_id,
             # is mapped on a different processor
             if inp not in proc_tasks:
                 in_processor_id = get_task_processor_id(mapping, inp)
-                in_proc_type = architecture.get_proc_type_id(in_processor_id)
-                bandwidth = architecture.get_communication_speed_mb_s(in_proc_type, proc_type)
+                bandwidth = architecture.get_communication_speed_mb_s(in_processor_id, proc_id)
                 tokens = app_graph.tasks_out_comm_cost[proc_task]
                 inp_read_penalty = get_memory_access_penalty_ms(tokens, token_bytes, bandwidth)
                 communication_penalty += inp_read_penalty

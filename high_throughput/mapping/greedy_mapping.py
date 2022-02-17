@@ -29,7 +29,7 @@ def map_greedy(app_graph, architecture, time_eval_matrix, start_processor_id=0, 
     # e.g. layers = ["conv1_relu", "conv2_relu", "FC", "Softmax"]
     layers = app_graph.jobs_per_task
     # e.g. ["CPU0", "CPU1", "CPU2", "CPU3", "CPU4", "GPU"]
-    processors = architecture.processors
+    processors = architecture.src_and_dst_processor_types
     start_proc_id = 0
     if start_processor_id != -1:
         start_proc_id = start_processor_id
@@ -126,7 +126,7 @@ def get_most_busy_processor_id(mapping, architecture, time_eval_matrix):
     most_busy_proc_id = 0
     max_time = sum_proc_times[0]
 
-    for proc_id in range(len(architecture.processors)):
+    for proc_id in range(len(architecture.src_and_dst_processor_types)):
         time = sum_proc_times[proc_id]
         if time > max_time:
             most_busy_proc_id = proc_id
@@ -202,7 +202,7 @@ def get_most_beneficial_migration(mapping, architecture, app_graph, time_eval_ma
 
     time_benefit = -1
     is_head = True
-    for dst_proc_id in range(len(architecture.processors)):
+    for dst_proc_id in range(len(architecture.src_and_dst_processor_types)):
         if dst_proc_id != src_proc_id:
             head_migration_time_benefit = get_task_migration_benefit(head_task, mapping, architecture, app_graph,
                                                                      time_eval_matrix, most_busy_proc_id, dst_proc_id)

@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from enum import Enum
+import os
 
 
 class JSONNestedClassVisitor:
@@ -18,6 +19,9 @@ class JSONNestedClassVisitor:
         self._file = None
 
     def run(self):
+        # create parent directory for file, if it doesn't exist
+        os.makedirs(os.path.dirname(self._filepath), exist_ok=True)
+
         self._file = open(self._filepath, "w")
         try:
             self.visit_object(self._root)
@@ -30,18 +34,18 @@ class JSONNestedClassVisitor:
         Recursive object visitor
         :param obj: object to visit
         """
-        if self.is_class_object(obj):
+        if is_class_object(obj):
             if isinstance(obj, Enum):
                 self.visit_enum(obj)
             else:
                 self.visit_class_object(obj)
             return
 
-        if self.is_dictionary(obj):
+        if is_dictionary(obj):
             self.__visit_dict(obj)
             return
 
-        if self.is_collection(obj):
+        if is_collection(obj):
             self._visit_collection(obj)
             return
 
@@ -98,27 +102,6 @@ class JSONNestedClassVisitor:
             self._file.write(str(simple_obj))
 
     ###############################
-    #           type checks      #
-
-    def is_class_object(self, obj):
-        try:
-            if obj.__dict__:
-                return True
-        except AttributeError:
-            return False
-
-    def is_collection(self, obj):
-        collection = isinstance(obj, Sequence)
-        string = self.is_string(obj)
-        return collection and not string
-
-    def is_string(self, obj):
-        return isinstance(obj, (str, bytes, bytearray))
-
-    def is_dictionary(self, obj):
-        return isinstance(obj, dict)
-
-    ###############################
     #      utility funcs          #
     def write_comma_sep_ln(self, item_id, max_items):
         if item_id < max_items - 1:
@@ -136,3 +119,27 @@ class JSONNestedClassVisitor:
 
     def prefix_dec(self):
         self._prefix = self._prefix[0: len(self._prefix) - self.__prefix_len]
+
+
+###############################
+#           type checks      #
+def is_class_object(obj):
+    try:
+        if obj.__dict__:
+            return True
+    except AttributeError:
+        return False
+
+
+def is_string(obj):
+    return isinstance(obj, (str, bytes, bytearray))
+
+
+def is_dictionary(obj):
+    return isinstance(obj, dict)
+
+
+def is_collection(obj):
+    collection = isinstance(obj, Sequence)
+    string = is_string(obj)
+    return collection and not string

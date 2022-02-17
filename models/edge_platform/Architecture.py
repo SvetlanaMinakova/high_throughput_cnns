@@ -1,44 +1,33 @@
 class Architecture:
     """
-    Target architecture class
-    :param processors: list of distinct processors names, e.g., ["CPU0", "CPU1", "CPU2", "CPU3", "CPU4", "GPU"]
+    Target edge hardware platform (architecture) class
+    :param processors: list of unique processors names, e.g., ["CPU0", "CPU1", "CPU2", "CPU3", "CPU4", "GPU"]
     :param processors_types: list of processor types, e.g., ["large_CPU", "large_CPU", "small_CPU", "small_CPU", "GPU"]
         required: len(processors_types) = len(processors)
     :param processor_types_distinct: list of distinct processor types, e.g., ["large_CPU", "small_CPU", "GPU"]
     """
     def __init__(self, processors, processors_types,  processor_types_distinct):
+        self.name = "architecture"
         self.processors = processors
-        # names of processors that are accelerators
-        self.accelerators = []
         self.processors_types = processors_types
+        self.processors_num = len(processors)
         self.processors_types_distinct = processor_types_distinct
         self.processor_types_distinct_num = len(processor_types_distinct)
-        self.processors_num = len(processors)
-        self.communication_channels = []
+        # names of processors that are accelerators
+        self.accelerators = []
+        # Deprecated (replaced by communication matrix)
+        # self.communication_channels = []
+        # communication speed (in MegaBytes per second) between every pair of processors
+        # available on the platform
+        self.communication_speed_matrix_mb_s = [[0 for i in range(self.processors_num)] for j in range(self.processors_num)]
         # max flops for every type of processor: needed for flop-based evaluation
         self.max_giga_flops_per_proc_type = [1 for _ in processor_types_distinct]
 
-    def add_communication_channel(self, proc_type_1, proc_type_2, speed):
-        """
-        Add communication speed (in tokens/s) between two processors
-        :param proc_type_1: type of the source processor (unique)
-        :param proc_type_2: type of the destination processor (unique)
-        :param speed: communication speed (in tokens/s) between processors of specified types
-        """
-        channel = CommunicationChannel(proc_type_1, proc_type_2, speed)
-        self.communication_channels.append(channel)
+    def set_communication_speed_mb_s(self, src_proc_id, dst_proc_id, communication_speed_mb_s):
+        self.communication_speed_matrix_mb_s[src_proc_id][dst_proc_id] = communication_speed_mb_s
 
-    def find_communication_channel(self, proc_type_1, proc_type_2):
-        for channel in self.communication_channels:
-            if proc_type_1 in channel.processors and proc_type_2 in channel.processors:
-                return channel
-        return None
-
-    def get_communication_speed_mb_s(self, proc_type_1, proc_type_2):
-        channel = self.find_communication_channel(proc_type_1, proc_type_2)
-        if channel is None:
-            return 0
-        return channel.bandwidth_mb_s
+    def get_communication_speed_mb_s(self, src_proc_id, dst_proc_id):
+        return self.communication_speed_matrix_mb_s[src_proc_id][dst_proc_id]
 
     def get_proc_type_id(self, processor_id):
         """
@@ -75,19 +64,6 @@ class Architecture:
         return -1
 
 
-class CommunicationChannel:
-    """
-    Communication channel between two types of processors
-    characterises speed with which two processors of specified types communicate
-    Attributes:
-        processor_type_1, processor_type_2: types of processors communicating
-        bandwidth_mb_s : communication bandwidth (in MegaBytes per second)
-    """
-    def __init__(self, processor_type_1, processor_type_2, bandwidth_mb_s):
-        self.processors = [processor_type_1, processor_type_2]
-        self.bandwidth_mb_s = bandwidth_mb_s
-
-
 def get_jetson():
     """
     Get Jetson as architecture example
@@ -97,12 +73,18 @@ def get_jetson():
     processor_types = ["large_CPU", "large_CPU", "small_CPU", "small_CPU", "small_CPU", "GPU"]
     processor_types_distinct = ["large_CPU", "small_CPU", "GPU"]
     jetson = Architecture(processors, processor_types, processor_types_distinct)
+    jetson.name = "Jetson"
 
     # bandwidth between processors
     # CPU/GPU bandwidth = 20 GB/s
     cpu_gpu_bandwidth_mb_s = 20 * 1e9/1e6
-    jetson.add_communication_channel("large_CPU", "GPU", cpu_gpu_bandwidth_mb_s)
-    jetson.add_communication_channel("small_CPU", "GPU", cpu_gpu_bandwidth_mb_s)
+    for src_processor_id in range(len(jetson.processors)):
+        for dst_processor_id in range(len(jetson.processors)):
+            src_processor_type = jetson.processors_types[src_processor_id]
+            dst_processor_type = jetson.processors_types[dst_processor_id]
+            if src_processor_type in ["large_CPU", "small_CPU"] and dst_processor_type == "GPU" or\
+                    src_processor_type == "GPU" and dst_processor_type in ["large_CPU", "small_CPU"]:
+                jetson.set_communication_speed_mb_s(src_processor_id, dst_processor_id, cpu_gpu_bandwidth_mb_s)
 
     # list of accelerators
     jetson.accelerators.append("GPU")

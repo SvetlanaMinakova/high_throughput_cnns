@@ -256,7 +256,7 @@ def print_expected_exec_time(partitions, eval_table, architecture):
                 task_time = eval_table[proc_type_id_distinct][task]
                 proc_time += task_time
 
-        print(architecture.processors[proc_id], " expected time = ", proc_time)
+        print(architecture.src_and_dst_processor_types[proc_id], " expected time = ", proc_time)
 
 
 def get_distinct_processor_type_id(processor_type, processor_types_distinct):

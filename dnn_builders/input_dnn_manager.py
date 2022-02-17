@@ -64,7 +64,7 @@ def create_or_load_analysis_dnn_model(dnn_model_spec,
         stage = "ONNX model loading"
         if verbose:
             print(stage, verbose)
-        onnx_model = read_and_check_consistency(dnn_model_spec)
+        onnx_model = read_and_check_consistency(dnn_model_spec, verbose=verbose)
         stage = "ONNX -> Analysis dnn model conversion"
         if verbose:
             print(stage, verbose)

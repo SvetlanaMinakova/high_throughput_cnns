@@ -255,7 +255,7 @@ class GA:
         crhomosome_id = 0
         for chromosome in self.population:
             print("CRHOMOSOME: ", crhomosome_id)
-            chromosome.print(self.architecture.processors, self.app_graph.tasks)
+            chromosome.print(self.architecture.src_and_dst_processor_types, self.app_graph.tasks)
             crhomosome_id = crhomosome_id + 1
 
     def print_population_short(self):

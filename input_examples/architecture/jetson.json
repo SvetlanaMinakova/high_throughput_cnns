@@ -1,0 +1,11 @@
+{
+  "name": "Jetson",
+  "processors": ["CPU0","CPU1","CPU2","CPU3","CPU4","GPU"],
+  "processors_types": ["large_CPU","large_CPU","small_CPU","small_CPU","small_CPU","GPU"],
+  "processors_num": 6,
+  "processors_types_distinct": ["large_CPU","small_CPU","GPU"],
+  "processor_types_distinct_num": 3,
+  "accelerators": ["GPU"],
+  "communication_speed_matrix_mb_s": [[0,0,0,0,0,20000.0],[0,0,0,0,0,20000.0],[0,0,0,0,0,20000.0],[0,0,0,0,0,20000.0],[0,0,0,0,0,20000.0],[20000.0,20000.0,20000.0,20000.0,20000.0,0]],
+  "max_giga_flops_per_proc_type": [16.28,10.85,250]
+}

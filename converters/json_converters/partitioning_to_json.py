@@ -22,7 +22,7 @@ def partitioning_to_json(dnn, architecture, mapping, partitions, connections, ou
         print("  - save partitioning (CSDF) of", dnn.name, "in", output_file_path)
 
     # meta-data
-    processors = architecture.processors
+    processors = architecture.src_and_dst_processor_types
     json_partitions = []
     json_connections = []
 
