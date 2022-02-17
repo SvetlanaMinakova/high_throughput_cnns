@@ -1,4 +1,4 @@
-from high_throughput.mapping.chromosome import Chromosome
+from DSE.mapping.chromosome import Chromosome
 import random
 import json
 

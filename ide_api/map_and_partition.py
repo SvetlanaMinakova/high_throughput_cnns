@@ -1,4 +1,4 @@
-from high_throughput.mapping.map_and_partition import map_and_partition
+from DSE.mapping.map_and_partition import map_and_partition
 from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
 from models.edge_platform.Architecture import get_jetson
 from models.dnn_model.dnn import set_built_in
@@ -24,7 +24,7 @@ def run_single_onnx():
     # print DNN
     # dnn.print_details()
 
-    inp_files_directory = str(os.path.join(str(get_project_root()), "input_examples/high_throughput/" + dnn.name))
+    inp_files_directory = str(os.path.join(str(get_project_root()), "input_examples/DSE/" + dnn.name))
     outp_files_directory = str(os.path.join(str(get_project_root()), "output/" + dnn.name))
 
     # EXAMPLE 1: greedy mapping with FLOPS-based dnn throughput evaluation

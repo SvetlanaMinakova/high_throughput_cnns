@@ -1,4 +1,4 @@
-from high_throughput.scheduling.dnn_scheduling import DNNScheduling
+from DSE.scheduling.dnn_scheduling import DNNScheduling
 """
 DNN-based application model
 """

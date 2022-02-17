@@ -50,7 +50,7 @@ def run_single_onnx():
     # dnn.print_details()
     built_in_ops = ["activation", "normalization", "skip"]
 
-    ga_conf_path = str(get_project_root()) + "/input_examples/high_throughput/ga_conf_generic.json"
+    ga_conf_path = str(get_project_root()) + "/input_examples/DSE/ga_conf_generic.json"
     increase_dnn_throughput(dnn, architecture, built_in_ops, ga_conf_path, token_size=4)
 
 

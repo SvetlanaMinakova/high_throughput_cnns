@@ -19,7 +19,7 @@ def build_time_eval_matrix_from_lut(dnn, app_graph, architecture, lut_file_per_p
         if verbose:
             print("Throughput eval_table: no LUT is specified as input_examples. Random execution times are used.")
 
-        from high_throughput.eval_table.moc_et_builder import get_moc_eval_table
+        from DSE.eval_table.moc_et_builder import get_moc_eval_table
         eval_matrix = get_moc_eval_table(app_graph, architecture, acceleration_per_proc_type={})
         return eval_matrix
 

@@ -10,8 +10,8 @@ __pycache__/
 
 # local folders
 output/
-high_throughput/data
-high_throughput/generated
+DSE/data
+DSE/generated
 
 #.idea (Pycharm folder)
 .idea

@@ -19,13 +19,13 @@ def increase_dnn_throughput(dnn_name, architecture, task_graph_path, eval_path, 
     """
 
     # imports
-    from high_throughput.eval_table.direct_measurements_et_builder import build_eval_table
+    from DSE.eval_table.direct_measurements_et_builder import build_eval_table
     from converters.json_converters.json_task_graph import parse_app_graph_json
-    from high_throughput.mapping.ga import GA
-    from high_throughput.mapping.greedy_mapping import map_greedy
+    from DSE.mapping.ga import GA
+    from DSE.mapping.greedy_mapping import map_greedy
     from converters.json_converters.json_ga_conf_parser import parse_ga_conf
     from eval.latency.dnn_latency import eval_latency_sequential, eval_latency_pipeline
-    from high_throughput.mapping.sequential import map_sequential
+    from DSE.mapping.sequential import map_sequential
 
     # -------------
     # prepare data

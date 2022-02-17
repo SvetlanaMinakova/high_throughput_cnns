@@ -94,12 +94,12 @@ def get_task_graph(dnn, task_graph_path=None, verbose=False):
     if task_graph_path is None:
         if verbose:
             print("  - build task graph")
-        app_graph = dnn_to_task_graph(dnn)
+        task_graph = dnn_to_task_graph(dnn)
     else:
         if verbose:
             print("  - parse task graph", task_graph_path)
-        app_graph = parse_app_graph_json(task_graph_path)
-    return app_graph
+        task_graph = parse_app_graph_json(task_graph_path)
+    return task_graph
 
 
 def get_time_eval_table(dnn, dnn_task_graph, architecture, eval_type="flops", eval_path=None, verbose=False):
@@ -117,8 +117,8 @@ def get_time_eval_table(dnn, dnn_task_graph, architecture, eval_type="flops", ev
     :return: per-layer execution time (latency) evaluation matrix
     """
     # imports
-    from high_throughput.eval_table.flops_et_builder import build_flops_time_eval_table
-    from high_throughput.eval_table.direct_measurements_et_builder import build_eval_table
+    from DSE.eval_table.flops_et_builder import build_flops_time_eval_table
+    from DSE.eval_table.direct_measurements_et_builder import build_eval_table
 
     if eval_type == "measurements":
         if eval_path is None:
@@ -153,8 +153,8 @@ def get_mapping(dnn_task_graph, architecture, eval_table, map_algo="greedy", ga_
     :return: per-layer execution time (latency) evaluation matrix
     """
     # imports
-    from high_throughput.mapping.ga import GA
-    from high_throughput.mapping.greedy_mapping import map_greedy
+    from DSE.mapping.ga import GA
+    from DSE.mapping.greedy_mapping import map_greedy
     from converters.json_converters.json_ga_conf_parser import parse_ga_conf
 
     if map_algo == "greedy":

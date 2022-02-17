@@ -1,5 +1,5 @@
 import copy
-from high_throughput.eval_table.eval_dnn_latency_from_et import get_sum_proc_times,\
+from DSE.eval_table.eval_dnn_latency_from_et import get_sum_proc_times,\
     get_pipeline_execution_proc_time
 
 

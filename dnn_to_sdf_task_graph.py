@@ -7,7 +7,8 @@ import sys
 Console API file
 """
 
-# test run examples:
+# test run example:
+# python dnn_to_sdf_task_graph.py --cnn /home/svetlana/ONNX/OnnxZooModels/alexnet.onnx  -o ./output/alexnet
 
 
 def main():
@@ -29,7 +30,8 @@ def main():
     parser = argparse.ArgumentParser(description='The script converts an input CNN (in supported input format) into a '
                                                  'task-graph (SDF) model where every node is a task. One node '
                                                  'of the task graph (SDF) model is functionally equivalent '
-                                                 'to one or more input DNN layers')
+                                                 'to one or more input DNN layers. The task-graph (SDF) model is saved'
+                                                 'as a JSON file')
 
     parser.add_argument('--cnn', metavar='--cnn', type=str, action='store', required=True,
                         help='path to one or several CNNs. Can be a path to: '
