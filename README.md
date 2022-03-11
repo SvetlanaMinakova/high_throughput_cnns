@@ -11,7 +11,7 @@ parallelism: data-level parallelism and task-level parallelism, available in a C
 distribute (map) the computations within the CNN to the computational resources of an edge (mobile or embedded) platform.
 The CNN distribution (mapping) is considered efficient if it ensures high CNN throughput. 
 To find an efficient CNN mapping, our proposed methodology performs an automated Design Space Exploration (DSE), 
-based on a Genetic Algorithm (GA) as proposed in the original paper on a Greedy Algorithm (only added to the tool).
+based on a Genetic Algorithm (GA) as proposed in the original paper or on a Greedy Algorithm (only added to the tool).
 Exploitation of task-level (pipeline) parallelism together with data-level parallelism is the main novel feature of our proposed methodology.
 This feature distinguishes our methodology from the existing DL frameworks and other methodologies 
 that utilize only task-level (pipeline) parallelism or only data-level parallelism, available in a CNN, to ensure high CNN throughput. 
@@ -23,7 +23,7 @@ models zoo and execute the CNNs on the NVIDIA Jetson TX2 edge platform.
 We compare the throughput demonstrated by the CNNs mapped on the Jetson TX2 platform using:
 our proposed methodology and the best-known and state-of-the-art TensorRT DL framework for the Jetson TX2 edge platform. 
 The experimental results shown that ~20% higher throughput is achieved, when the CNNs are mapped using our methodology. 
-We note  that, while the proposed methodology is applicable for a wide range of CNNs and platforms, in the current tool implementation teh code generations is only supported for ARM-CL (ARM CPU) + TensoRT (GPU) DL frameworks and is only meant to be executed on NVIDIA Jetson platforms.
+We note  that, while the efficient mapping search, offered by the methodology, is applicable to a wide range of CNNs and platforms, the (real) code generation provided by this tool only supports ARM-CL (ARM CPU) + TensoRT (GPU) DL frameworks. Moreover, the code is only meant to be executed on NVIDIA Jetson platforms.
 
 
 ## requirements
