@@ -53,7 +53,7 @@ Shortly, the steps are:
 
 Below, more detailed explanation for every step (script) is given.
 
-### Generation of an SDF (task graph) from an input CNN (dnn_to_sdf_task_graph.py)
+### Step 1: Generation of an SDF (task graph) from an input CNN (dnn_to_sdf_task_graph.py)
 
 This script generates a static dataflow (task graph) from the input CNN model. 
 The task graph shows the tasks, performed to execute CNN inference as well as connections between these tasks.
@@ -65,4 +65,4 @@ Example use
 
 Example output: see ./output/mnist/task_graph.json or ./input_examples/intermediate/mnist/task_graph.json
 
-# Generation of a per-layer execution time (latency) evaluation template (sdf_latency_eval_template.py)
+### Step 2: Generation of a per-layer execution time (latency) evaluation template (sdf_latency_eval_template.py)
