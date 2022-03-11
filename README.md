@@ -5,7 +5,7 @@ paper published In Proc. "20th International Conference on Embedded Computer Sys
 
 
 ## Abstract
-The code is aimed at increasing throughput of a Convolutional Neural Network (CNN), executed on an edge (mobile or embedded) platform.
+The code is aimed at increasing throughput of a Convolutional Neural Network (CNN), executed on a multi-processor edge (mobile or embedded) platform.
 It represents a methodology, based on the publication above. The methodology exploits two types of 
 parallelism: data-level parallelism and task-level parallelism, available in a CNN, to efficiently 
 distribute (map) the computations within the CNN to the computational resources of an edge (mobile or embedded) platform.
@@ -52,17 +52,22 @@ Shortly, the steps are:
 1) Generation of an SDF (task graph) from an input CNN (dnn_to_sdf_task_graph.py)
 2) Generation of a per-layer execution time (latency) evaluation template (sdf_latency_eval_template.py)
 3) Filling the generated per-layer execution time (latency) template with real latency estimations (this step is performed manually!)
-4) Generation of efficient mapping of the input CNN onto target edge platform architecture (map_and_partition.py)
+4) Generation of efficient mapping of the input CNN onto target edge platform architecture (generate_mapping.py)
 5) Generation of final (CSDF) application model (generate_final_app_model.py)
 6) Generation of executable code from the input DNN and the final application model (see generate_code*.py)
 
-Below, more detailed explanation for every step (script) is given.
+Below, we give more detailed explanation for every step (script). In case you are wondering,
+*why do you use so many steps and intermediate files for every step?*, the answer is: 
+to provide modularity, reusability, and  control over each separate step. For example, if a conversion 
+from an ONNX (CNN) model into a task graph (SDF) goes wrong for a particular CNN model, you can always create 
+CNN task graph manually. Analogously, if you'd like to map a CNN onto several platforms, 
+with our modular structure, you will not have to repeat Step 1 many times.
 
 ### Step 1: Generation of an SDF (task graph) from an input CNN (dnn_to_sdf_task_graph.py)
 
 This script generates a static dataflow (task graph) from the input CNN model. 
 The task graph shows the tasks, performed to execute CNN inference as well as connections between these tasks.
-One task corresponds to one or more layers of the input CNN. 
+One task corresponds to one or more layers of the input CNN. One task is always mapped on one processor of a target edge platform.
 
 Example use
 
@@ -71,6 +76,73 @@ Example use
 Example output: see ./output/mnist/task_graph.json or ./input_examples/intermediate/mnist/task_graph.json
 
 ### Step 2: Generation of a per-layer execution time (latency) evaluation template (sdf_latency_eval_template.py)
+To explore the efficient mapping of a CNN onto a target edge platform, our methodology uses CNN 
+execution time (latency) estimation. The estimation is stored in a CNN- and platform- dependent .json file 
+of a specific platform. At this step, we generate such a file for an input CNN and an input target platform description.
+The template can be initialized with zeros (execution time of every layer on every processor=0) or with 
+number of floating-point operations (FLOPs).
+*NOTE: even though, we provide FLOPs as a metric for execution time template initialization, we strongly 
+recommend (manually) replacing the FLOPs with real measurement on the platform (see Step 3).
+The measurements on the platform provide precise and platform-aware estimation of CNN latency, while 
+FLOPs are a platform-agnostic and imprecise metric*
+
+#### Example 1: empty template
+Example use
+
+*$ python ./sdf_latency_eval_template.py -tg ./output/mnist/task_graph.json -p ./input_examples/architecture/jetson.json -o ./output/mnist/*
+
+Example output: see ./output/mnist/eval_template.json or ./input_examples/intermediate/mnist/eval_template.json
+
+
+#### Example 2: template initialized with FLOPs
+
+*$ python ./sdf_latency_eval_template.py --cnn ./input_examples/dnn/mnist.onnx -tg ./output/mnist/task_graph.json -p ./input_examples/architecture/jetson.json --flops*
+
+Example output: see ./output/mnist/eval_template.json or ./input_examples/intermediate/mnist/eval_template.json
+
+### STEP 3: Filling the generated per-layer execution time (latency) template with real latency estimations
+*NOTE: this step is performed manually!*
+
+As explained in Step 2, to explore the efficient mapping of a CNN onto a target edge platform, our methodology uses CNN 
+execution time (latency) estimation. Our tool does not provide means to estimate CNN latency. You can do it by performing
+measurements on the platform or using third-party tools. When you've obtained your measurements, please insert them 
+in the .json template, generated at Step 2.
+
+### Step 4: Generation of efficient mapping of the input CNN onto target edge platform architecture (generate_mapping.py)
+
+At this step, we map a CNN, represented as a task graph (SDF) onto a target edge platform. 
+To find an efficient CNN mapping, our proposed methodology performs an automated Design Space Exploration (DSE), 
+based on a Genetic Algorithm (GA) as proposed in the original paper or on a Greedy Algorithm (only added to the tool).
+The GA typically delivers better results (in terms of CNN throughput increase). However, 
+it may create cyclic dependencies in the final application graph. These dependencies have to be resolved with 
+a specific schedule. The greedy algorithm, on the other hand, provides worse results, but works fast 
+and does not create cyclic dependencies. The details of the GA and the greedy algorithm are given in scripts
+./DSE/mapping/ga.py (see top-level class "ga" ) and ./DSE/mapping/greedy_mapping.py (see top-level function "map_greedy") 
+
+Example use:
+
+*$ python ./generate_mapping.py --cnn ./input_examples/dnn/mnist.onnx -tg ./output/mnist/task_graph.json -p ./input_examples/architecture/jetson.json -o ./output/mnist/ -e ./output/mnist/eval.json -map-algo greedy*
+
+Example output: see ./output/mnist/mapping.json or ./input_examples/intermediate/mnist/mapping.json
+
+### Step 5: Generation of final (CSDF) application model (generate_final_app_model.py)
+
+At this step, we generate final (CSDF) application model from the input CNN and meta-files generated at 
+steps above. The final application model describes CNN partitioning (splitting into sub-graphs), 
+mapping (of sub-graph onto processors of a target edge platform), and scheduling.
+
+Example use
+
+*python ./generate_final_app_model.py --cnn ./input_examples/dnn/mnist.onnx -tg ./output/mnist/task_graph.json -p ./input_examples/architecture/jetson.json -m ./output/mnist/mapping.json -o ./output/mnist/*
+
+Example output: see ./output/mnist/app.json or ./input_examples/intermediate/mnist/app.json
+
+
+
+
+
+
+
 
 
 

@@ -4,13 +4,13 @@ import argparse
 import traceback
 
 # example
-# python map_and_partition.py --cnn /home/svetlana/ONNX/OnnxZooModels/alexnet.onnx /
+# python generate_mapping.py --cnn /home/svetlana/ONNX/OnnxZooModels/alexnet.onnx /
 # -tg ./output/alexnet/task_graph.json -p ./output/architecture/jetson.json /
 # -map-algo ga -e ./output/alexnet/eval.json /
 # -ga-config ./input_examples/high_throughput/ga_conf_generic.json -o ./output/alexnet
 
 # ex 2
-# ../kerasProj/venv/bin/python ./map_and_partition.py --cnn /home/svetlana/ONNX/OnnxZooModels/mnist.onnx -tg ./output/mnist/task_graph.json -p ./output/architecture/jetson.json -o ./output/mnist/ -e ./output/mnist/eval.json -map-algo greedy
+# ../kerasProj/venv/bin/python ./generate_mapping.py --cnn /home/svetlana/ONNX/OnnxZooModels/mnist.onnx -tg ./output/mnist/task_graph.json -p ./output/architecture/jetson.json -o ./output/mnist/ -e ./output/mnist/eval.json -map-algo greedy
 
 
 def main():
@@ -133,17 +133,21 @@ def main():
 
         # --------------
         # get partitioning
+        # PARTITIONING is outdated. Now the CNN partitioning together with the CNN mapping
+        # and scheduling are saved encoded in teh final application model
         # --------------
         # get partitioning
+        """
         stage = "Partition mapped DNN (create final CSDF graph)"
         print_stage(stage, verbose)
         partitions, connections = get_partitioning(dnn, task_graph, mapping)
 
         # save partitioning as a .json file
         partitioning_to_json(dnn, architecture, mapping, partitions, connections, output_dir, verbose)
+        """
 
     except Exception as e:
-        print("Mapping error: " + str(e))
+        print("Mapping generation error: " + str(e))
         traceback.print_tb(e.__traceback__)
 
 
