@@ -3,16 +3,6 @@ import traceback
 import os
 import sys
 
-"""
-Console API file
-"""
-
-# test run example:
-# python dnn_to_sdf_task_graph.py --cnn /home/svetlana/ONNX/OnnxZooModels/alexnet.onnx  -o ./output/alexnet
-
-# ex2:
-# ../kerasProj/venv/bin/python ./dnn_to_sdf_task_graph.py --cnn /home/svetlana/ONNX/OnnxZooModels/mnist.onnx
-
 
 def main():
     # import current directory and it's subdirectories into system path for the current console
@@ -22,22 +12,16 @@ def main():
 
     # import project modules
     from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
-    from converters.dnn_to_task_graph import dnn_to_task_graph, dnn_to_task_graph_with_built_in
-    from converters.json_converters.json_task_graph import save_task_graph_as_json
     from models.dnn_model.dnn import set_built_in
     from models.dnn_model.transformation.ops_fusion import fuse_built_in
-    from util import get_project_root, print_stage
-    from converters.json_converters.json_to_architecture import json_to_architecture
+    from util import print_stage
+    import codegen.arm_cl.arm_cl_dnn_visitor
 
     # general arguments
-    parser = argparse.ArgumentParser(description='The script converts an input CNN (in supported input format) into a '
-                                                 'task-graph (SDF) model where every node is a task. One node '
-                                                 'of the task graph (SDF) model is functionally equivalent '
-                                                 'to one or more input DNN layers. The task-graph (SDF) model is saved'
-                                                 'as a JSON file')
+    parser = argparse.ArgumentParser(description='The script generates pure CPU (ARM-CL) code for a cnn')
 
     parser.add_argument('--cnn', metavar='--cnn', type=str, action='store', required=True,
-                        help='path to a CNN. Can be a path to: '
+                        help='path to one or several CNNs. Can be a path to: '
                              '1) a path to an .onnx file; '
                              '2) a path to .h5 file (cnn in format of Keras DL framework). ')
 
@@ -83,14 +67,10 @@ def main():
             set_built_in(dnn, fused_ops)
             fuse_built_in(dnn)
 
-        stage = "Converting DNN-> Task graph (SDF) model"
+        stage = "Generating ARM-CL (CPU) code"
         print_stage(stage, verbose)
-        dnn_task_graph = dnn_to_task_graph(dnn)
-
-        stage = "Saving Task graph (SDF) model as a .json file"
-        print_stage(stage, verbose)
-        task_graph_path = str(os.path.join(output_dir, "task_graph.json"))
-        save_task_graph_as_json(dnn_task_graph, task_graph_path)
+        code_folder = output_dir + "/code/cpu"
+        codegen.arm_cl.arm_cl_dnn_visitor.visit_dnn(dnn, code_folder)
 
     except Exception as e:
         print(" Task Graph (SDF) model creation error: " + str(e))

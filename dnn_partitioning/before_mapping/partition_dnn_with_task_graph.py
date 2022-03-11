@@ -1,4 +1,4 @@
-from models.app_model.DNNBasedAppModel import InterDNNConnection
+from models.app_model.InterDNNConnection import InterDNNConnection
 from models.dnn_model.dnn import DNN
 from models.TaskGraph import TaskGraph, task_name_to_layer_ids
 import copy

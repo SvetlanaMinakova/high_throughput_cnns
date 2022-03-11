@@ -57,7 +57,7 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
 
 def visit_dnn_partitioned(dnn_partitions: [DNN], code_dir, verbose=True):
     """
-    Generate TensorRT code for a DNN
+    Generate ARM-CL code for a DNN
     :param dnn_partitions: list of (partitioned) DNNs
     :param code_dir: folder to generate code in
     NOTE: folder will be overwritten!

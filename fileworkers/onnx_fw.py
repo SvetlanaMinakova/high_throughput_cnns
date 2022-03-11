@@ -1,5 +1,4 @@
 import onnx
-import keras2onnx
 import os
 
 
@@ -19,6 +18,7 @@ def save_keras_as_onnx(keras_model, path):
     :param keras_model: keras model
     :param path: path to output ONNX model
     """
+    import keras2onnx
     # convert to onnx model
     onnx_model = keras2onnx.convert_keras(keras_model, keras_model.name)
     keras2onnx.save_model(onnx_model, path)

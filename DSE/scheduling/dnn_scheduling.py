@@ -10,3 +10,12 @@ class DNNScheduling(Enum):
     # custom, explicitly specified execution order
     CUSTOM = 3
 
+
+def str_to_scheduling(str_scheduling: str):
+    """ Convert string into DNNScheduling"""
+    if str_scheduling.lower() == "sequential":
+        return DNNScheduling.SEQUENTIAL
+    if str_scheduling.lower() == "pipeline":
+        return DNNScheduling.PIPELINE
+    return DNNScheduling.CUSTOM
+

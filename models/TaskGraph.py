@@ -91,7 +91,7 @@ def get_task_id(app_graph, layer_id):
         layer_ids = task_name_to_layer_ids(task)
         if layer_id in layer_ids:
             return task_id
-    raise Exception("Task not found")
+    raise Exception("Task not found for job " + str(layer_id) + "task graph jobs: " + str(app_graph.jobs_per_task))
 
 
 def get_example_graph():

@@ -1,18 +1,15 @@
 from models.app_model.InterDNNConnection import InterDNNConnection
 from models.dnn_model.dnn import DNN
-from models.TaskGraph import TaskGraph, task_name_to_layer_ids
+from models.app_model.dnn_inf_model import DNNInferenceModel
 import copy
 
 
-def partition_dnn_with_task_graph_and_mapping(dnn: DNN, task_graph: TaskGraph, mapping: []):
+def partition_dnn_with_dnn_inference_model(dnn: DNN, dnn_inf_model: DNNInferenceModel):
     """
     Partition dnn according to the task graph, generated from this DNN
     :param dnn: dnn, represented as (analysis) dnn model
-    :param task_graph: task graph, generated from this DNN
-    :param mapping: [tasks_per_processor[i]], i in [1, len(processors_num)], where
-     processors_num is the total number of processors available on the platform,
-     tasks_per_processor[i] = [task_1, task_2, ..., task_t] is the list of tasks mapped on the processor i,
-     where task_t is id of task in the task graph
+    :param dnn_inf_model: DNN inference model that specifies
+        partitioning, mapping and scheduling of the dnn on the target platform
 
     :return: tuple: partitions, connections where:
         partitions is a  list of dnn partitions, where every partition is a DNN, that is
@@ -20,7 +17,7 @@ def partition_dnn_with_task_graph_and_mapping(dnn: DNN, task_graph: TaskGraph, m
         functionality of the original DNN
         connections: connections between the DNN partitions
     """
-    partitioner = DNNPartitioner(dnn, task_graph, mapping)
+    partitioner = DNNPartitioner(dnn, dnn_inf_model)
     partitioner.partition()
     partitions = partitioner.get_partitions()
     connections = partitioner.get_inter_partition_connections()
@@ -32,11 +29,10 @@ class DNNPartitioner:
     Partitions DNN into sub-graphs (partitions)
     according to the task graph, created from the DNN
     """
-    def __init__(self, dnn: DNN, task_graph: TaskGraph, mapping: []):
+    def __init__(self, dnn: DNN, dnn_inf_model):
         self.dnn = dnn
         self.layers = dnn.get_layers()
-        self.task_graph = task_graph
-        self.mapping = mapping
+        self.dnn_inf_model = dnn_inf_model
         self.partition_name_to_proc_id = {}
 
         # meta-data
@@ -51,27 +47,17 @@ class DNNPartitioner:
 
     def __create_partitions(self):
         self.__partitions = []
-        for processor_id in range(len(self.mapping)):
-            task_ids_per_processor = self.mapping[processor_id]
-            # TODO: check if it still works!
-            if len(task_ids_per_processor) > 0:
-                task_names_per_processor = []
-                for task_id in task_ids_per_processor:
-                    task_name = self.task_graph.tasks[task_id]
-                    task_names_per_processor.append(task_name)
+        for partition_desc in self.dnn_inf_model.partitions:
+            layer_names = partition_desc["layers"]
+            partition = self.__create_partition(partition_desc["name"], layer_names)
+            self.__partitions.append(partition)
 
-                partition = self.__create_partition(task_names_per_processor)
-                self.__partitions.append(partition)
-                self.partition_name_to_proc_id[partition.name] = processor_id
-
-    def __create_partition(self, task_names):
-        partition = DNN(name="Subnet" + str(len(self.__partitions)))
-        for task_name in task_names:
-            task_layer_ids = task_name_to_layer_ids(task_name)
-            for layer_id in task_layer_ids:
-                layer = self.layers[layer_id]
-                layer_copy = copy.deepcopy(layer)
-                partition.add_layer(layer_copy)
+    def __create_partition(self, partition_name, layer_names):
+        partition = DNN(name=partition_name)
+        for layer_name in layer_names:
+            layer = self.dnn.find_layer_by_name(layer_name)
+            layer_copy = copy.deepcopy(layer)
+            partition.add_layer(layer_copy)
 
         return partition
 
@@ -151,15 +137,14 @@ class DNNPartitioner:
                 self.__inter_partition_connections.append(inter_partition_connection)
 
     def __find_partition_id(self, layer_id):
-        for partition_id in range(len(self.__partitions)):
-            partition = self.__partitions[partition_id]
-            proc_id = self.partition_name_to_proc_id[partition.name]
-            task_ids_per_processor = self.mapping[proc_id]
-            task_names_per_processor = [self.task_graph.tasks[task_id] for task_id in task_ids_per_processor]
-            for task_name in task_names_per_processor:
-                layer_ids = task_name_to_layer_ids(task_name)
-                if layer_id in layer_ids:
-                    return partition_id
+        layer = self.layers[layer_id]
+        layer_name = layer.name
+        partition_id = 0
+        for partition_desc in self.dnn_inf_model.partitions:
+            if layer_name in partition_desc["layers"]:
+                return partition_id
+            partition_id += 1
+
     #########
     # getters
 

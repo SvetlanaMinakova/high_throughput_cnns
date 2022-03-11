@@ -11,6 +11,7 @@ def supported_keras_models():
 
 def build_keras_model(model_name, input_shape=None, classes=1000, custom_classifier=False, freeze_baseline=True):
     import tensorflow
+    import tensorflow.keras.applications
     """
     Load one of the supported Keras models (models from Keras.applications Zoo)
     Args:
@@ -41,7 +42,7 @@ def build_keras_model(model_name, input_shape=None, classes=1000, custom_classif
                 freeze_weights(model)
 
     if model_name == "resnet18":
-        from dnn_builders_zoo.renset_builder import ResNet18
+        from dnn_builders.renset_builder import ResNet18
         from tensorflow import keras
         if custom_classifier is True:
             base_model = ResNet18(input_shape, weights='imagenet', classes=classes, include_top=include_top)

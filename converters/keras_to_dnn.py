@@ -1,5 +1,4 @@
 from models.dnn_model.dnn import DNN, Layer
-import tensorflow as tf
 
 
 def keras_to_dnn(keras_model, data_layout): # ="NCHW"
@@ -47,6 +46,7 @@ def add_layer_connections(keras_model, keras_layer, dnn):
     :param keras_layer: keras layer
     :param dnn dnn
     """
+    import tensorflow as tf
     layer_inp = keras_layer.input
 
     if isinstance(layer_inp, tf.Tensor):
@@ -113,7 +113,7 @@ def create_dnn_layer(keras_layer, data_layout):
 
     else:
         # print(keras_layer.name, "input: ", keras_layer.input)
-        #NHWC
+        # NHWC
         n_in, h_in, w_in, c_in = keras_tensor_shape_nhwc(keras_layer.input)
         n_out, h_out, w_out, c_out = keras_tensor_shape_nhwc(keras_layer.output)
 
