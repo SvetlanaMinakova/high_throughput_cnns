@@ -7,7 +7,7 @@ def supported_test_analysis_dnns():
 
 def create_test_analysis_dnn_model(model_name):
     """
-    Build a test analysis dnn model
+    Build a tests analysis dnn model
     Args:
         model_name: model name
 
@@ -22,7 +22,7 @@ def create_test_analysis_dnn_model(model_name):
     if model_name == "testDNNResidual":
         return get_test_dnn_residual()
 
-    raise Exception("unknown test analysis dnn model: " + model_name)
+    raise Exception("unknown tests analysis dnn model: " + model_name)
 
 
 def get_test_dnn_simple():

@@ -70,71 +70,50 @@ def generate_dnn_inference_model(dnn: DNN,
             connections_desc.append(json_connection)
         return connections_desc
 
-    def _init_inter_partition_buffers():
+    def _init_inter_partition_buffers(inter_partition_buf):
         if schedule_type == DNNScheduling.PIPELINE:
-            _init_inter_partition_buffers_pipeline()
+            _init_inter_partition_buffers_pipeline(inter_partition_buf)
         else:
-            _init_inter_partition_buffers_sequential()
+            _init_inter_partition_buffers_sequential(inter_partition_buf)
 
-    def _init_inter_partition_buffers_pipeline():
+    def _init_inter_partition_buffers_pipeline(inter_partition_buf):
         """
         Generate buffers for pipelined application
         in case of pipeline schedule, every connection is associated with two buffers:
         an input buffer for data-consuming partition and an output buffer for data-producing partition
         """
-        naive_buffers = []
-        # inter-DNN connection
+        inter_partition_buf.clear()
         for connection in partitioner.get_inter_partition_connections():
             # double-buffer
             for i in range(2):
-                buffer_name = "B" + str(len(naive_buffers))
+                buffer_name = "B" + str(len(inter_partition_buf))
                 buffer_size = connection.data_w * connection.data_h * connection.data_ch
-                data_buffer = DataBuffer(buffer_name, buffer_size)
-                data_buffer.users.append(connection.name)
-                naive_buffers.append(data_buffer)
+                buffer = DataBuffer(buffer_name, buffer_size)
+                buffer.users.append(connection.name)
+                buffer.type = "double_buffer"
+                # double buffer is defined as two sub-buffers
+                # first sub-buffer is an output buffer used by a connection source layer.
+                # second sub-buffer is an input buffer, used by the connection destination layer.
+                buffer.subtype = "out" if i == 0 else "in"
+                inter_partition_buffers.append(buffer)
 
-        # TODO: buffers reuse
-
-        #
-        for data_buffer_id in range(len(naive_buffers)):
-            data_buffer = naive_buffers[data_buffer_id]
-            buffer_subtype = "out" if data_buffer_id % 2 == 0 else "in"
-            buffer_desc = {"name": data_buffer.name,
-                           "size_tokens": data_buffer.size,
-                           "users": data_buffer.users,
-                           "type": "double_buffer",
-                           "subtype": buffer_subtype
-                           }
-            inter_partition_buffers.append(buffer_desc)
-
-    def _init_inter_partition_buffers_sequential():
+    def _init_inter_partition_buffers_sequential(inter_partition_buf):
         """
         Generate buffers for sequential application
         in case of sequential schedule, every connection is associated with a
         single buffer, which serves as an input to data-consuming partition and as an
         output buffer for data-producing partition
         """
-        naive_buffers = []
+        inter_partition_buf.clear()
 
         for connection in partitioner.get_inter_partition_connections():
             # single-buffer
-            buffer_name = "B" + str(len(naive_buffers))
+            buffer_name = "B" + str(len(inter_partition_buf))
             buffer_size = connection.data_w * connection.data_h * connection.data_ch
-            data_buffer = DataBuffer(buffer_name, buffer_size)
-            data_buffer.users.append(connection.name)
-            naive_buffers.append(data_buffer)
-
-        # TODO: buffers reuse
-
-        #
-        for data_buffer in naive_buffers:
-            buffer_desc = {"name": data_buffer.name,
-                           "size_tokens": data_buffer.size,
-                           "users": data_buffer.users,
-                           "type": "single_buffer",
-                           "subtype": "none"
-                           }
-            inter_partition_buffers.append(buffer_desc)
+            buffer = DataBuffer(buffer_name, buffer_size)
+            buffer.users.append(connection.name)
+            buffer.type = "single_buffer"
+            inter_partition_buffers.append(buffer)
 
     # generate partitions and connections between them
     partitioner = DNNPartitioner(dnn, task_graph, mapping)
@@ -150,7 +129,7 @@ def generate_dnn_inference_model(dnn: DNN,
 
     # generate external buffers
     inter_partition_buffers = []
-    _init_inter_partition_buffers()
+    _init_inter_partition_buffers(inter_partition_buffers)
 
     dnn_inference_model = DNNInferenceModel(schedule_type, partitions, connections, inter_partition_buffers)
     return dnn_inference_model

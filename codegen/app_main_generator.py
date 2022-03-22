@@ -35,7 +35,8 @@ class AppMainGenerator(CodegenVisitor):
                  gpu_partition_class_names: [],
                  cpu_partition_class_names: [],
                  flags: [CodegenFlag],
-                 cpu_core_per_class_name: {}):
+                 cpu_core_per_class_name: {},
+                 inter_partition_buffers=None):
         """
         Create new application main-file generator
         :param print_file: file to print app-main code in
@@ -44,7 +45,8 @@ class AppMainGenerator(CodegenVisitor):
         :param flags: code-generation flags (see  codegen_config.CodegenFlags)
         :param cpu_core_per_class_name: (dictionary) key (string)=class_name, value(int) = cpu_core_id
          allocation of CPU cores for every partition
-        :param dnn_buffers: (optional) list of buffers, used to store DNN data
+        :param inter_partition_buffers: (optional) list of buffers, used to store data
+            exchanged between DNN partitions
         """
         super().__init__(print_file, prefix="")
         self.class_names_in_exec_order = class_names_in_exec_order
@@ -55,7 +57,7 @@ class AppMainGenerator(CodegenVisitor):
         self.flags = flags
         self.cpu_core_per_class_name = cpu_core_per_class_name
         self.default_cpu_core = 1
-        # self.dnn_buffers = dnn_buffers
+        self.inter_partition_buffers = inter_partition_buffers
 
         # meta-data
         # names of partitions and engines
@@ -161,9 +163,29 @@ class AppMainGenerator(CodegenVisitor):
         self.write_line("/////////////////////////////////////////////////////////////")
         self.write_line("// CREATE DNN/DNN PARTITIONS I/O BUFFERS //")
         self.write_line("std::cout<<\" - I/O buffers allocation.\"<<std::endl;")
-        self._create_naive_local_buffers()
+        if self.inter_partition_buffers is None:
+            self._create_naive_local_buffers()
+        else:
+            self._create_specified_local_buffers()
 
-    #####################
+    ####################################
+    # explicitly specified local buffers
+    def _create_specified_local_buffers(self):
+        self.write_line("//GPU")
+        for name in self.gpu_partition_names:
+            self._create_naive_local_in_buffer(name)
+            self._create_naive_local_out_buffer(name)
+
+        self.write_line("")
+        self.write_line("//CPU")
+
+        for name in self.cpu_partition_names:
+            self._create_naive_local_in_buffer(name)
+            self._create_naive_local_out_buffer(name)
+
+        self.write_line("")
+
+    ####################################
     # naive local buffers
 
     def _create_naive_local_buffers(self):

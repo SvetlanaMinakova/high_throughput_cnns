@@ -1,4 +1,5 @@
-from codegen.codegen_visitor import create_or_overwrite_code_dir, copy_static_app_code
+from codegen.codegen_visitor import copy_static_app_code
+from fileworkers.common_fw import create_or_overwrite_dir
 from models.dnn_model.dnn import DNN
 import codegen.arm_cl.cpp.cpp_dnn_visitor
 import codegen.arm_cl.h.h_dnn_visitor
@@ -16,7 +17,7 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
     NOTE: folder will be overwritten!
     :param verbose: print details
     """
-    create_or_overwrite_code_dir(code_dir)
+    create_or_overwrite_dir(code_dir)
 
     # attributes
     class_names_in_exec_order = [dnn.name]
@@ -63,7 +64,7 @@ def visit_dnn_partitioned(dnn_partitions: [DNN], code_dir, verbose=True):
     NOTE: folder will be overwritten!
     :param verbose: print details
     """
-    create_or_overwrite_code_dir(code_dir)
+    create_or_overwrite_dir(code_dir)
     codegen_flags = [codegen.codegen_config.CodegenFlag.CPU_PROFILE]
 
     # attributes

@@ -15,7 +15,7 @@ def print_info():
     print_supported_dnn_ops()
     print("  models from keras/tensorflow library: ", supported_keras_models())
     print("")
-    print("  test hand-made dnns:")
+    print("  tests hand-made dnns:")
     print("    -keras: ", supported_custom_dnns())
     print("    -analysis dnn model: ", supported_test_analysis_dnns())
     print("")

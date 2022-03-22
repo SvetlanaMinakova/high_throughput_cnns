@@ -379,7 +379,7 @@ def find_partition(proc, startTaskId):
 
 
 """
-test dnn_partitioning creator
+tests dnn_partitioning creator
 """
 def test():
 

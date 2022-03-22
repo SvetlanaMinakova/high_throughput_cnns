@@ -1,6 +1,6 @@
-from codegen.codegen_visitor import create_or_overwrite_code_dir, copy_static_app_code
+from codegen.codegen_visitor import copy_static_app_code
+from fileworkers.common_fw import create_or_overwrite_dir
 from models.dnn_model.dnn import DNN
-from models.TaskGraph import TaskGraph
 from models.edge_platform.Architecture import Architecture
 from models.app_model.dnn_inf_model import DNNInferenceModel
 from dnn_partitioning.after_mapping.partition_dnn_with_inf_model import partition_dnn_with_dnn_inference_model
@@ -32,7 +32,7 @@ def visit_dnn_app(dnn: DNN,
     NOTE: folder will be overwritten!
     :param verbose: print details
     """
-    create_or_overwrite_code_dir(code_dir)
+    create_or_overwrite_dir(code_dir)
     codegen_flags = []
 
     # attributes

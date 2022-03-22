@@ -18,7 +18,7 @@ def test_model(verbose=True):
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(10,  activation='softmax'))
     if verbose:
-        print("test CNN built")
+        print("tests CNN built")
         # display the model summary
         model.summary()
     return model
@@ -46,7 +46,7 @@ def test_model_conv(verbose=False):
     model.add(layers.Dropout(0.5))
     model.add(layers.Dense(10,  activation='softmax'))
     if verbose:
-        print("test CNN built")
+        print("tests CNN built")
         # display the model summary
         model.summary()
     return model

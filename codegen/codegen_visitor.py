@@ -1,5 +1,5 @@
 import os.path
-from os import path
+from fileworkers.common_fw import create_or_overwrite_dir
 from util import get_project_root
 from shutil import copyfile
 
@@ -55,32 +55,3 @@ def copy_static_app_code(code_dir):
     else:
         print("WARNING: codegen: no static lib files copied. ")
         print("reason: I could not find static files directory: " + static_files_dir)
-
-
-def create_or_overwrite_code_dir(code_dir):
-    """
-    Delete and re-create code directory
-    :param code_dir: cod directory
-    """
-    if os.path.exists(code_dir):
-        clear_folder(code_dir)
-    else:
-        os.makedirs(code_dir)
-
-
-def clear_folder(directory_to_clear):
-    """
-    Recursively delete directory with code
-    :param directory_to_clear: directory with code
-    """
-    if os.path.exists(directory_to_clear):
-        for the_file in os.listdir(directory_to_clear):
-            file_path = os.path.join(directory_to_clear, the_file)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-                else:
-                    clear_folder(file_path)
-                    os.rmdir(file_path)
-            except Exception as e:
-                print(e)

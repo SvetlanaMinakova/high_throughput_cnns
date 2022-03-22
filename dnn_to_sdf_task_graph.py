@@ -7,7 +7,7 @@ import sys
 Console API file
 """
 
-# test run example:
+# tests run example:
 # python dnn_to_sdf_task_graph.py --cnn /home/svetlana/ONNX/OnnxZooModels/alexnet.onnx  -o ./output/alexnet
 
 # ex2:

@@ -11,6 +11,8 @@ class DataBuffer:
         self.name = name
         self.size = size
         self.users = []
+        self.type = "none"
+        self.subtype = "none"
 
     def assign(self, user):
         self.users.append(user)

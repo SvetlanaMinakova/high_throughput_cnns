@@ -3,7 +3,7 @@ import sys
 import argparse
 import traceback
 
-# test example
+# tests example
 # python ./sdf_latency_eval_template.py -tg ./output/alexnet/task_graph.json -p ./output/architecture/jetson.json -o ./output/alexnet/
 
 # ex 2
