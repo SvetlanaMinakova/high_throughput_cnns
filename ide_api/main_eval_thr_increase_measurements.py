@@ -25,7 +25,7 @@ def all_inputs_present(task_graph_path, eval_path, ga_conf_path):
 
 
 def run_metafiles_folder():
-    inp_files_directory = str(os.path.join(str(get_project_root()), "../input_examples/high_throughput/new"))
+    inp_files_directory = str(os.path.join(str(get_project_root()), "../input_examples/intermediate/new"))
     architecture = get_jetson()
     sub_folder_names = next(os.walk(inp_files_directory))[1]
 

@@ -1,0 +1,53 @@
+{
+  "schedule_type": "PIPELINE",
+  "partitions": [    {
+      "name": "Subnet0",
+      "processor_id": 1,
+      "processor_type": "large_CPU",
+      "layers": ["Convolution110"]
+    },    {
+      "name": "Subnet1",
+      "processor_id": 3,
+      "processor_type": "small_CPU",
+      "layers": ["Convolution28","Pooling66"]
+    },    {
+      "name": "Subnet2",
+      "processor_id": 5,
+      "processor_type": "GPU",
+      "layers": ["Pooling160","Times212"]
+    }],
+  "connections": [    {
+      "name": "external_Pooling66_Convolution110",
+      "src": "Subnet1",
+      "dst": "Subnet0"
+    },    {
+      "name": "external_Convolution110_Pooling160",
+      "src": "Subnet0",
+      "dst": "Subnet2"
+    }],
+  "inter_partition_buffers": [    {
+      "name": "B0",
+      "size": 1568,
+      "users": ["external_Pooling66_Convolution110"],
+      "type": "double_buffer",
+      "subtype": "out"
+    },    {
+      "name": "B1",
+      "size": 1568,
+      "users": ["external_Pooling66_Convolution110"],
+      "type": "double_buffer",
+      "subtype": "in"
+    },    {
+      "name": "B2",
+      "size": 3136,
+      "users": ["external_Convolution110_Pooling160"],
+      "type": "double_buffer",
+      "subtype": "out"
+    },    {
+      "name": "B3",
+      "size": 3136,
+      "users": ["external_Convolution110_Pooling160"],
+      "type": "double_buffer",
+      "subtype": "in"
+    }]
+}

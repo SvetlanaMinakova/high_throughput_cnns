@@ -23,4 +23,5 @@ def print_info():
 
 
 def supported_dnn_extensions():
-    return [".onnx", ".h5"]
+    return [".onnx", ".h5", ".json"]
+

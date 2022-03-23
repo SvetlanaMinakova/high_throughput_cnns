@@ -89,7 +89,7 @@ def get_task_graph(dnn, task_graph_path=None, verbose=False):
     """
     # imports
     from converters.dnn_to_task_graph import dnn_to_task_graph_with_built_in, dnn_to_task_graph
-    from converters.json_converters.json_task_graph import parse_app_graph_json
+    from converters.json_converters.json_task_graph import parse_task_graph_json
 
     if task_graph_path is None:
         if verbose:
@@ -98,7 +98,7 @@ def get_task_graph(dnn, task_graph_path=None, verbose=False):
     else:
         if verbose:
             print("  - parse task graph", task_graph_path)
-        task_graph = parse_app_graph_json(task_graph_path)
+        task_graph = parse_task_graph_json(task_graph_path)
     return task_graph
 
 

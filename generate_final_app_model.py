@@ -20,7 +20,7 @@ def main():
     from models.dnn_model.dnn import set_built_in
     from models.dnn_model.transformation.ops_fusion import fuse_built_in
     from converters.json_converters.json_to_architecture import json_to_architecture
-    from converters.json_converters.json_task_graph import parse_app_graph_json
+    from converters.json_converters.json_task_graph import parse_task_graph_json
     from converters.json_converters.json_to_mapping import json_to_mapping
     from converters.json_converters.dnn_inf_model_to_json import dnn_inf_model_to_json
     from models.app_model.dnn_inf_model import generate_dnn_inference_model
@@ -32,9 +32,11 @@ def main():
                                                  ' GPU (TensorRT) code for a cnn')
 
     parser.add_argument('--cnn', metavar='--cnn', type=str, action='store', required=True,
-                        help='path to one or several CNNs. Can be a path to: '
+                        help='path to a CNN. Can be a path to: '
                              '1) a path to an .onnx file; '
-                             '2) a path to .h5 file (cnn in format of Keras DL framework). ')
+                             '2) a path to .h5 file (cnn in format of Keras DL framework). '
+                             '3) a path to .json file (cnn in internal format. This format'
+                             'can be obtained from on .onnx or .h5 file using ./dnn_to_json script)')
 
     parser.add_argument('-fo', metavar='--fused-ops', type=str, action='store',
                         default='activation,normalization,arithmetic,skip',
@@ -106,7 +108,7 @@ def main():
 
         stage = "Reading task graph (SDF) model "
         print_stage(stage, verbose)
-        task_graph = parse_app_graph_json(task_graph_path)
+        task_graph = parse_task_graph_json(task_graph_path)
 
         stage = "Reading target platform architecture"
         print_stage(stage, verbose)

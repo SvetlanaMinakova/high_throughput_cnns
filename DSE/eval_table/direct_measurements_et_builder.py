@@ -1,5 +1,5 @@
 from models.edge_platform.Architecture import get_jetson
-from converters.json_converters.json_task_graph import parse_app_graph_json
+from converters.json_converters.json_task_graph import parse_task_graph_json
 import json
 
 
@@ -11,7 +11,7 @@ def build_from_eval_and_tg_paths(task_graph_path, eval_path, architecture):
     :param eval_path: path to evaluation, obtained from the measurements on the platform and stored in .json format
     :return: eval table
     """
-    app_graph = parse_app_graph_json(task_graph_path)
+    app_graph = parse_task_graph_json(task_graph_path)
     et = build_eval_table(eval_path, architecture.processors_types_distinct, app_graph)
     return et
 

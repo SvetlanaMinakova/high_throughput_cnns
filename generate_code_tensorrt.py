@@ -21,9 +21,11 @@ def main():
     parser = argparse.ArgumentParser(description='The script generates pure GPU (TensorRT) code for a cnn')
 
     parser.add_argument('--cnn', metavar='--cnn', type=str, action='store', required=True,
-                        help='path to one or several CNNs. Can be a path to: '
+                        help='path to a CNN. Can be a path to: '
                              '1) a path to an .onnx file; '
-                             '2) a path to .h5 file (cnn in format of Keras DL framework). ')
+                             '2) a path to .h5 file (cnn in format of Keras DL framework). '
+                             '3) a path to .json file (cnn in internal format. This format'
+                             'can be obtained from on .onnx or .h5 file using ./dnn_to_json script)')
 
     parser.add_argument('-fo', metavar='--fused-ops', type=str, action='store',
                         default='activation,normalization,arithmetic,skip',
@@ -67,13 +69,13 @@ def main():
             set_built_in(dnn, fused_ops)
             fuse_built_in(dnn)
 
-        stage = "Generating ARM-CL (CPU) code"
+        stage = "Generating TensorRT (GPU) code"
         print_stage(stage, verbose)
         code_folder = output_dir + "/code/gpu"
         codegen.tensorrt.tensorrt_dnn_visitor.visit_dnn(dnn, code_folder)
 
     except Exception as e:
-        print(" Task Graph (SDF) model creation error: " + str(e))
+        print("TensorRT (GPU) code generation error: " + str(e))
         traceback.print_tb(e.__traceback__)
 
 

@@ -63,34 +63,42 @@ def create_or_load_analysis_dnn_model(dnn_model_spec,
     if dnn_model_src == "onnx":
         stage = "ONNX model loading"
         if verbose:
-            print(stage, verbose)
+            print(stage)
         onnx_model = read_and_check_consistency(dnn_model_spec, verbose=verbose)
         stage = "ONNX -> Analysis dnn model conversion"
         if verbose:
-            print(stage, verbose)
+            print(stage)
         dnn_model = onnx_to_dnn(onnx_model)
         return dnn_model
 
     if dnn_model_src == "h5":
         stage = "Keras .h5 model loading"
         if verbose:
-            print(stage, verbose)
+            print(stage)
         from fileworkers.keras_fw import load_keras_model
         dnn_keras = load_keras_model(dnn_model_spec)
         stage = "Keras -> Analysis dnn model conversion"
         if verbose:
-            print(stage, verbose)
+            print(stage)
         dnn_model = keras_to_dnn(dnn_keras, data_layout="auto")
+        return dnn_model
+
+    if dnn_model_src == "json":
+        stage = "JSON model parsing"
+        if verbose:
+            print(stage)
+        from converters.json_converters.json_to_dnn import parse_json_dnn
+        dnn_model = parse_json_dnn(dnn_model_spec)
         return dnn_model
 
     if dnn_model_src == "keras" or dnn_model_src == "tf_zoo":
         stage = "Keras model " + dnn_model_spec + " creation"
         if verbose:
-            print(stage, verbose)
+            print(stage)
         dnn_keras = build_keras_model(dnn_model_spec)
         stage = "Keras -> Analysis dnn model conversion"
         if verbose:
-            print(stage, verbose)
+            print(stage)
         dnn_model = keras_to_dnn(dnn_keras, data_layout="auto")
         return dnn_model
 

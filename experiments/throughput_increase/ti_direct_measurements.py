@@ -20,7 +20,7 @@ def increase_dnn_throughput(dnn_name, architecture, task_graph_path, eval_path, 
 
     # imports
     from DSE.eval_table.direct_measurements_et_builder import build_eval_table
-    from converters.json_converters.json_task_graph import parse_app_graph_json
+    from converters.json_converters.json_task_graph import parse_task_graph_json
     from DSE.mapping.ga import GA
     from DSE.mapping.greedy_mapping import map_greedy
     from converters.json_converters.json_ga_conf_parser import parse_ga_conf
@@ -31,7 +31,7 @@ def increase_dnn_throughput(dnn_name, architecture, task_graph_path, eval_path, 
     # prepare data
 
     # build application graph
-    dnn_task_graph = parse_app_graph_json(task_graph_path)
+    dnn_task_graph = parse_task_graph_json(task_graph_path)
     # build time eval matrix
     eval_table = build_eval_table(eval_path, architecture.processors_types_distinct, dnn_task_graph)
 

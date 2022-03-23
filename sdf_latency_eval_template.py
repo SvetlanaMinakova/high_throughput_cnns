@@ -19,7 +19,7 @@ def main():
     # import project modules
     from util import print_stage
     from converters.json_converters.json_to_architecture import json_to_architecture
-    from converters.json_converters.json_task_graph import parse_app_graph_json
+    from converters.json_converters.json_task_graph import parse_task_graph_json
     from eval.flops.layer_flops_estimator import eval_layer_flops
     from models.TaskGraph import get_task_id
     from fileworkers.json_fw import save_as_json
@@ -40,10 +40,11 @@ def main():
                         help='path to output files directory')
 
     parser.add_argument('--cnn', metavar='--cnn', type=str, action='store', default=None,
-                        help='path a CNN. Can be a path to: '
+                        help='path to a CNN (Only required if --flops flag is used). Can be a path to: '
                              '1) a path to an .onnx file; '
                              '2) a path to .h5 file (cnn in format of Keras DL framework). '
-                             'Only required if --flops flag is used')
+                             '3) a path to .json file (cnn in internal format. This format'
+                             'can be obtained from on .onnx or .h5 file using ./dnn_to_json script)')
 
     # general flags
     parser.add_argument("--silent", help="do not provide print-out for the script steps", action="store_true", default=False)
@@ -65,7 +66,7 @@ def main():
 
         stage = "Reading task graph (SDF) model "
         print_stage(stage, verbose)
-        task_graph = parse_app_graph_json(task_graph_path)
+        task_graph = parse_task_graph_json(task_graph_path)
 
         stage = "Reading target platform architecture"
         print_stage(stage, verbose)

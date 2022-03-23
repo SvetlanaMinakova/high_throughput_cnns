@@ -7,7 +7,7 @@ import traceback
 # python generate_mapping.py --cnn /home/svetlana/ONNX/OnnxZooModels/alexnet.onnx /
 # -tg ./output/alexnet/task_graph.json -p ./output/architecture/jetson.json /
 # -map-algo ga -e ./output/alexnet/eval.json /
-# -ga-config ./input_examples/high_throughput/ga_conf_generic.json -o ./output/alexnet
+# -ga-config ./input_examples/intermediate/ga_conf_generic.json -o ./output/alexnet
 
 # ex 2
 # ../kerasProj/venv/bin/python ./generate_mapping.py --cnn /home/svetlana/ONNX/OnnxZooModels/mnist.onnx -tg ./output/mnist/task_graph.json -p ./output/architecture/jetson.json -o ./output/mnist/ -e ./output/mnist/eval.json -map-algo greedy
@@ -24,7 +24,7 @@ def main():
     from converters.json_converters.json_to_architecture import json_to_architecture
     from DSE.mapping.map_and_partition import get_mapping, get_partitioning
     from DSE.eval_table.direct_measurements_et_builder import build_eval_table
-    from converters.json_converters.json_task_graph import parse_app_graph_json
+    from converters.json_converters.json_task_graph import parse_task_graph_json
     from converters.json_converters.mapping_to_json import mapping_to_json
     from converters.json_converters.partitioning_to_json import partitioning_to_json
     from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
@@ -38,9 +38,11 @@ def main():
                                                  '(architecture). The mapping is saved in an output JSON file')
 
     parser.add_argument('--cnn', metavar='--cnn', type=str, action='store', required=True,
-                        help='path to one or several CNNs. Can be a path to: '
+                        help='path to a CNN. Can be a path to: '
                              '1) a path to an .onnx file; '
-                             '2) a path to .h5 file (cnn in format of Keras DL framework). ')
+                             '2) a path to .h5 file (cnn in format of Keras DL framework). '
+                             '3) a path to .json file (cnn in internal format. This format'
+                             'can be obtained from on .onnx or .h5 file using ./dnn_to_json script)')
 
     parser.add_argument('-fo', metavar='--fused-ops', type=str, action='store',
                         default='activation,normalization,arithmetic,skip',
@@ -110,7 +112,7 @@ def main():
 
         stage = "Reading task graph (SDF) model "
         print_stage(stage, verbose)
-        task_graph = parse_app_graph_json(task_graph_path)
+        task_graph = parse_task_graph_json(task_graph_path)
 
         stage = "Reading target platform architecture"
         print_stage(stage, verbose)

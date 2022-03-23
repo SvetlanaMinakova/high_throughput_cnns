@@ -1,0 +1,9 @@
+{
+  "name": "dnn",
+  "tasks": ["l_0","l_1","l_2","l_3","l_4"],
+  "tasks_num": 5,
+  "tasks_adjacent_list": [[1],[2],[3],[4],[]],
+  "tasks_reverse_adjacent_list": [[],[0],[1],[2],[3]],
+  "tasks_out_comm_cost": [6272,1568,3136,256,10],
+  "jobs_per_task": [["Convolution28"],["Pooling66"],["Convolution110"],["Pooling160"],["Times212"]]
+}

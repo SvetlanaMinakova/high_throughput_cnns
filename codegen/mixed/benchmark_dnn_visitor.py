@@ -41,6 +41,6 @@ def visit_dnn(dnn: DNN, code_dir, built_in, verbose=True):
 
     except Exception as err:
         sys.stderr.write("Benchmark CPU/GPU code generation error. DNN: " + dnn.name +
-                         " stage: " + stage + " reason: \n")
+                         " stage: " + stage + " reason: \n" + str(err))
         print(traceback.format_exc())
 

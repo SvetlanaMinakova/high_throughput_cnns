@@ -1,0 +1,16 @@
+{
+    "CPU0": [],
+    "CPU1": [
+        "Convolution110"
+    ],
+    "CPU2": [],
+    "CPU3": [
+        "Convolution28",
+        "Pooling66"
+    ],
+    "CPU4": [],
+    "GPU": [
+        "Pooling160",
+        "Times212"
+    ]
+}

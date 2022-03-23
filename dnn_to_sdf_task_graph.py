@@ -16,7 +16,7 @@ Console API file
 
 def main():
     # import current directory and it's subdirectories into system path for the current console
-    # this would allow to import project modules without adding the project to the PYTHONPATH
+    # this would allow importing project modules without adding the project to the PYTHONPATH
     this_dir = os.path.dirname(__file__)
     sys.path.append(this_dir)
 
@@ -39,7 +39,9 @@ def main():
     parser.add_argument('--cnn', metavar='--cnn', type=str, action='store', required=True,
                         help='path to a CNN. Can be a path to: '
                              '1) a path to an .onnx file; '
-                             '2) a path to .h5 file (cnn in format of Keras DL framework). ')
+                             '2) a path to .h5 file (cnn in format of Keras DL framework). '
+                             '3) a path to .json file (cnn in internal format. This format'
+                             'can be obtained from on .onnx or .h5 file using ./dnn_to_json script)')
 
     parser.add_argument('-fo', metavar='--fused-ops', type=str, action='store',
                         default='activation,normalization,arithmetic,skip',

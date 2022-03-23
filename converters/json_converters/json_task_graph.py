@@ -15,10 +15,10 @@ def save_task_graph_as_json(tg: TaskGraph, abs_path):
     visitor.run()
 
 
-def parse_app_graph_json(path):
+def parse_task_graph_json(path):
     """
     Parse application graph from JSON file
-    :param path path to json_converters file
+    :param path: path to json_converters file
     """
     with open(path, 'r') as file:
         if file is None:
