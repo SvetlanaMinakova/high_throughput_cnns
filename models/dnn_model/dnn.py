@@ -403,6 +403,9 @@ class Layer:
         self.__bordermode = bordermode
         self.set_autopads()
 
+    def get_border_mode(self):
+        return self.__bordermode
+
     def set_autopads(self):
         self.pads = self.__get_autopads()
 

@@ -71,6 +71,12 @@ class LayerTRTCPPVisitor(CodegenVisitor):
             pads_x = int((pads[1] + pads[3])/2)
             pads_y = int((pads[0] + pads[2])/2)
             self.write_line(self.layer.name + "->setPadding(DimsHW{" + str(pads_x) + ", " + str(pads_y) + "});")
+        else:
+            # simulate "same" border mode with pads
+            if self.layer.get_border_mode() == "same":
+                pads_x = int((self.layer.iw * (self.layer.stride - 1) - self.layer.stride + self.layer.fs)/2)
+                pads_y = int((self.layer.ih * (self.layer.stride - 1) - self.layer.stride + self.layer.fs)/2)
+                self.write_line(self.layer.name + "->setPadding(DimsHW{" + str(pads_x) + ", " + str(pads_y) + "});")
 
 
 """
