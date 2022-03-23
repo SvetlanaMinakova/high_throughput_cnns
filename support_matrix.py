@@ -7,6 +7,16 @@ from dnn_builders.keras_models_builder import supported_keras_models
 from dnn_builders.custom_dnn_builder import supported_custom_dnns
 from models.dnn_model.supported_ops import print_supported_dnn_ops
 from dnn_builders.test_analysis_dnn_builder import supported_test_analysis_dnns
+import os
+import sys
+
+
+def main():
+    # import current directory and it's subdirectories into system path for the current console
+    # this would allow to import project modules without adding the project to the PYTHONPATH
+    this_dir = os.path.dirname(__file__)
+    sys.path.append(this_dir)
+    print_info()
 
 
 def print_info():
@@ -25,3 +35,6 @@ def print_info():
 def supported_dnn_extensions():
     return [".onnx", ".h5", ".json"]
 
+
+if __name__ == "__main__":
+    main()
