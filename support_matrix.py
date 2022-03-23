@@ -13,7 +13,7 @@ import sys
 
 def main():
     # import current directory and it's subdirectories into system path for the current console
-    # this would allow to import project modules without adding the project to the PYTHONPATH
+    # this would allow importing project modules without adding the project to the PYTHONPATH
     this_dir = os.path.dirname(__file__)
     sys.path.append(this_dir)
     print_info()
