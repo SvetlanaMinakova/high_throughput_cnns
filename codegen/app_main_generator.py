@@ -273,18 +273,16 @@ class AppMainGenerator(CodegenVisitor):
         if len(self.cpu_partition_names) > 0:
             self.write_line("//CPU engine pointers")
             self.write_line("std::vector<cpu_engine*> cpu_engine_ptrs;")
-            self.write_line("")
-            for pid in range(len(self.cpu_engine_names)):
-                self.write_line("cpu_engine_ptrs.push_back(&e" + str(pid) + ");")
+            for cpu_engine_name in self.cpu_engine_names:
+                self.write_line("cpu_engine_ptrs.push_back(&" + cpu_engine_name + ");")
             self.write_line("")
 
         # if (_gpuDebugMode) {
         if len(self.gpu_partition_names) > 0:
-            self.write_line("")
             self.write_line("//GPU engine pointers")
             self.write_line("std::vector<gpu_engine*> gpu_engine_ptrs;")
-            for pid in range(len(self.gpu_partition_names)):
-                self.write_line("gpu_engine_ptrs.push_back(&e" + str(pid) + ");")
+            for gpu_engine_name in self.gpu_engine_names:
+                self.write_line("gpu_engine_ptrs.push_back(&" + gpu_engine_name + ");")
                 self.write_line("")
             
     def _create_pthread_parameters(self):

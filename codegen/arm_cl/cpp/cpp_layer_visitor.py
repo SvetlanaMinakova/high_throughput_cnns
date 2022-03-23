@@ -140,7 +140,7 @@ def get_pad_stride_info_line(layer):
         w_pad = int((layer.pads[0] + layer.pads[2])/2)
         h_pad = int((layer.pads[1] + layer.pads[3])/2)
     else:
-        if layer.get_border_mode() == "same":
+        if layer.get_border_mode() == "same" and layer.op in ["conv"]:
             w_pad = int((layer.iw * (layer.stride - 1) - layer.stride + layer.fs)/2)
             h_pad = int((layer.ih * (layer.stride - 1) - layer.stride + layer.fs)/2)
 

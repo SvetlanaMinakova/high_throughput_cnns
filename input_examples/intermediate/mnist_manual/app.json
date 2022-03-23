@@ -2,28 +2,28 @@
   "schedule_type": "PIPELINE",
   "partitions": [    {
       "name": "Subnet0",
+      "processor_id": 0,
+      "processor_type": "large_CPU",
+      "layers": ["Pooling160","Times212"]
+    },    {
+      "name": "Subnet1",
       "processor_id": 1,
       "processor_type": "large_CPU",
       "layers": ["Convolution110"]
     },    {
-      "name": "Subnet1",
-      "processor_id": 3,
-      "processor_type": "small_CPU",
-      "layers": ["Convolution28","Pooling66"]
-    },    {
       "name": "Subnet2",
       "processor_id": 5,
       "processor_type": "GPU",
-      "layers": ["Pooling160","Times212"]
+      "layers": ["Convolution28","Pooling66"]
     }],
   "connections": [    {
       "name": "external_Pooling66_Convolution110",
-      "src": "Subnet1",
-      "dst": "Subnet0"
+      "src": "Subnet2",
+      "dst": "Subnet1"
     },    {
       "name": "external_Convolution110_Pooling160",
-      "src": "Subnet0",
-      "dst": "Subnet2"
+      "src": "Subnet1",
+      "dst": "Subnet0"
     }],
   "inter_partition_buffers": [    {
       "name": "B0",

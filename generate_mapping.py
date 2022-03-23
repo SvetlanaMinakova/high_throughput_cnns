@@ -63,7 +63,7 @@ def main():
     parser.add_argument('-p', metavar='--platform', type=str, action='store', required=True,
                         help='path to edge platform (architecture) description, saved in .json format')
 
-    parser.add_argument('-map-algo', metavar='--map-algo', type=str, action='store', default="ga",
+    parser.add_argument('-map-algo', metavar='--map-algo', type=str, action='store', default="greedy",
                         help='value in [greedy, ga]: algorithm used for mapping of (computations within) the CNN'
                              'onto (the processors of) the target edge platform')
 
