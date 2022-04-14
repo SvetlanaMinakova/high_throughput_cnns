@@ -53,7 +53,7 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
                                                  trt=False)
     copy_static_app_code(code_dir)
     if verbose:
-        print("ARM-CL code is generated in", code_dir)
+        print("ARM-CL (CPU) code is generated in", code_dir)
 
 
 def visit_dnn_partitioned(dnn_partitions: [DNN], code_dir, verbose=True):
@@ -101,7 +101,7 @@ def visit_dnn_partitioned(dnn_partitions: [DNN], code_dir, verbose=True):
 
     copy_static_app_code(code_dir)
     if verbose:
-        print("TensorRT code is generated in", code_dir)
+        print("ARM-CL (CPU) code is generated in", code_dir)
 
 
 

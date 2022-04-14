@@ -27,8 +27,8 @@ struct fifo_buf{
 		this->fifo_size = fifo_size;
 		this->src = src;
 		this->dst = dst;     
-               this->in_rate = in_rate;
-               this->out_rate = out_rate;           
+                this->in_rate = in_rate;
+                this->out_rate = out_rate;           
 	}
 };
 
