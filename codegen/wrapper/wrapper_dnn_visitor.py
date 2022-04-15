@@ -5,18 +5,12 @@ from models.edge_platform.Architecture import Architecture
 from models.app_model.dnn_inf_model import DNNInferenceModel
 from dnn_partitioning.after_mapping.partition_dnn_with_inf_model import partition_dnn_with_dnn_inference_model
 from codegen.mixed.mixed_dnn_visitor import get_gpu_partition_class_names, get_cpu_cores_allocation
-"""
-# tensorRT (GPU) code
-import codegen.tensorrt.cpp.cpp_dnn_visitor
-import codegen.tensorrt.h.h_dnn_visitor
-# ARM-CL (CPU) code
-import codegen.arm_cl.cpp.cpp_dnn_visitor
-import codegen.arm_cl.h.h_dnn_visitor
-from codegen.arm_cl.dnn_to_streams import DNNSubStreamsGenerator
+# per-partition H and CPP files
+import codegen.wrapper.cpp.cpp_dnn_visitor
+import codegen.wrapper.h.h_dnn_visitor
 # other (common) code
-import codegen.makefile_generator
-import codegen.app_main_generator
-"""
+import codegen.wrapper.wrapper_app_main_generator
+import codegen.wrapper.wrapper_makefile_generator
 import codegen.codegen_config
 
 
@@ -47,41 +41,24 @@ def visit_dnn_app(dnn: DNN,
 
     dnn_partitions, connections = partition_dnn_with_dnn_inference_model(dnn, dnn_inf_model)
 
-    """
-    # visit every GPU partition
+    # visit every partition
     for partition in dnn_partitions:
-        if partition.name in gpu_partition_class_names:
-            codegen.tensorrt.cpp.cpp_dnn_visitor.visit_dnn(partition, code_dir, gpu_profile=True)
-            codegen.tensorrt.h.h_dnn_visitor.visit_dnn(partition, code_dir, gpu_profile=True)
-
-    # visit every CPU partition
-    for partition in dnn_partitions:
-        if partition.name in cpu_partition_class_names:
-            # represent dnn as a set of ARM-CL sub-streams
-            # where every parallel branch or residual connection
-            # is defined in a separate stream
-            sub_streams_generator = DNNSubStreamsGenerator(partition)
-            sub_streams_generator.dnn_to_sub_streams()
-            # visit DNN
-            codegen.arm_cl.cpp.cpp_dnn_visitor.visit_dnn(partition, code_dir, profile=True,
-                                                         sub_streams_generator=sub_streams_generator)
-            codegen.arm_cl.h.h_dnn_visitor.visit_dnn(partition, code_dir, profile=True,
-                                                     sub_streams_generator=sub_streams_generator)
+        target_proc_type = "GPU" if partition.name in gpu_partition_class_names else "CPU"
+        codegen.wrapper.cpp.cpp_dnn_visitor.visit_dnn(partition, code_dir, target_proc_type)
+        codegen.wrapper.h.h_dnn_visitor.visit_dnn(partition, code_dir, target_proc_type)
 
     # generate app main
-    codegen.app_main_generator.generate_app_main(code_dir,
-                                                 class_names_in_exec_order,
-                                                 gpu_partition_class_names,
-                                                 cpu_partition_class_names,
-                                                 codegen_flags,
-                                                 cpu_cores_allocation)
+    codegen.wrapper.wrapper_app_main_generator.generate_app_main(code_dir,
+                                                                 class_names_in_exec_order,
+                                                                 gpu_partition_class_names,
+                                                                 cpu_partition_class_names,
+                                                                 cpu_cores_allocation,
+                                                                 dnn_inf_model.connections,
+                                                                 dnn_inf_model.inter_partition_buffers)
+
     # generate makefile
-    codegen.makefile_generator.generate_makefile(code_dir,
-                                                 gpu_partition_class_names,
-                                                 cpu_partition_class_names,
-                                                 arm_cl=True,
-                                                 trt=True)
-    """
+    codegen.wrapper.wrapper_makefile_generator.generate_makefile(code_dir, class_names_in_exec_order)
+    # copy static code files
     static_code_path = "codegen/static_lib_files/wrapper"
     copy_static_app_code(code_dir, static_code_path)
     if verbose:

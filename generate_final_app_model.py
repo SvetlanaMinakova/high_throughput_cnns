@@ -6,7 +6,7 @@ import sys
 """ Generate final application (CSDF) model """
 
 # example:
-# ../kerasProj/venv/bin/python ./generate_final_app_model.py --cnn /home/svetlana/ONNX/OnnxZooModels/mnist.onnx -tg ./output/mnist/task_graph.json -p ./output/architecture/jetson.json -m ./output/mnist/mapping.json -o ./output/mnist/
+# python ./generate_final_app_model.py --cnn /home/svetlana/ONNX/OnnxZooModels/mnist.onnx -tg ./output/mnist/task_graph.json -p ./output/architecture/jetson.json -m ./output/mnist/mapping.json -o ./output/mnist/
 
 
 def main():
@@ -69,7 +69,6 @@ def main():
 
     # general flags
     parser.add_argument("--silent", help="do not provide print-out for the script steps", action="store_true", default=False)
-    parser.add_argument("--buffers-reuse", help="reuse buffers among partitions (for sequential schedule)", action="store_true", default=False)
 
     args = parser.parse_args()
     try:
@@ -87,7 +86,6 @@ def main():
             schedule_str = "pipeline"
             print("WARNING: unknown schedule", schedule_str, "! Default (pipeline) schedule is used instead.")
         schedule_type = DNNScheduling.PIPELINE if schedule_str == "pipeline" else DNNScheduling.SEQUENTIAL
-        buf_reuse = args.buffers_reuse
 
         silent = args.silent
         verbose = not silent
@@ -121,7 +119,7 @@ def main():
 
         stage = "Generating final application (CSDF) model"
         print_stage(stage, verbose)
-        app_model = generate_dnn_inference_model(dnn, architecture, task_graph, mapping, schedule_type, buf_reuse)
+        app_model = generate_dnn_inference_model(dnn, architecture, task_graph, mapping, schedule_type)
 
         stage = "Saving final application model as .json"
         print_stage(stage, verbose)

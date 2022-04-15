@@ -26,8 +26,7 @@ def generate_dnn_inference_model(dnn: DNN,
                                  architecture: Architecture,
                                  task_graph: TaskGraph,
                                  mapping,
-                                 schedule_type=DNNScheduling.PIPELINE,
-                                 reuse_buffers=True):
+                                 schedule_type=DNNScheduling.PIPELINE):
     """
     Generate Final DNN inference execution model:
         :param dnn: DNN
@@ -41,8 +40,6 @@ def generate_dnn_inference_model(dnn: DNN,
          :param schedule_type: type of schedule between CNN partitions:
             - sequential: partitions are executed one-by-one
             - pipeline: partitions are executed in a parallel pipelined fashion
-        :param reuse_buffers (flag): if True, buffers that store data between CNN partitions
-        will be reused. Otherwise, every partition will be allocated its own buffer
         # TODO: implement buffers reuse
         :return DNNInferenceModel class object
         """
@@ -85,17 +82,12 @@ def generate_dnn_inference_model(dnn: DNN,
         inter_partition_buf.clear()
         for connection in partitioner.get_inter_partition_connections():
             # double-buffer
-            for i in range(2):
-                buffer_name = "B" + str(len(inter_partition_buf))
-                buffer_size = connection.data_w * connection.data_h * connection.data_ch
-                buffer = DataBuffer(buffer_name, buffer_size)
-                buffer.users.append(connection.name)
-                buffer.type = "double_buffer"
-                # double buffer is defined as two sub-buffers
-                # first sub-buffer is an output buffer used by a connection source layer.
-                # second sub-buffer is an input buffer, used by the connection destination layer.
-                buffer.subtype = "out" if i == 0 else "in"
-                inter_partition_buffers.append(buffer)
+            buffer_name = "B" + str(len(inter_partition_buf))
+            buffer_size = connection.data_w * connection.data_h * connection.data_ch
+            buffer = DataBuffer(buffer_name, buffer_size)
+            buffer.users.append(connection.name)
+            buffer.type = "double_buffer"
+            inter_partition_buffers.append(buffer)
 
     def _init_inter_partition_buffers_sequential(inter_partition_buf):
         """

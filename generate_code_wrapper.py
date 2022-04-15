@@ -3,6 +3,9 @@ import traceback
 import os
 import sys
 
+# Example
+# python generate_code_wrapper.py --cnn ./input_examples/dnn/mnist.onnx -p ./input_examples/architecture/jetson.json -a ./input_examples/intermediate/mnist/app.json -o ./output/mnist
+
 
 def main():
     # import current directory and it's subdirectories into system path for the current console
@@ -14,14 +17,14 @@ def main():
     from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
     from models.dnn_model.dnn import set_built_in
     from models.dnn_model.transformation.ops_fusion import fuse_built_in
-    from converters.json_converters.json_to_architecture import json_to_architecture
     from converters.json_converters.json_to_dnn_inf_model import json_to_dnn_inf_model
-    from codegen.mixed.mixed_dnn_visitor import visit_dnn_app
+    from codegen.wrapper.wrapper_dnn_visitor import visit_dnn_app
     from util import print_stage
 
     # general arguments
-    parser = argparse.ArgumentParser(description='The script generates mixed CPU (ARM-CL) +'
-                                                 ' GPU (TensorRT) code for a cnn')
+    parser = argparse.ArgumentParser(description='The script generates code wrapper, which implements '
+                                                 'communication and synchronization primitives but NO '
+                                                 'real CNN functionality.')
 
     parser.add_argument('--cnn', metavar='--cnn', type=str, action='store', required=True,
                         help='path to a CNN. Can be a path to: '
@@ -91,15 +94,16 @@ def main():
         dnn_inf_model = json_to_dnn_inf_model(app_path)
         # print(mapping)
 
-        stage = "Generating mixed ARM-CL (CPU) + TensorRT (GPU) code"
+        stage = "Generating wrapper code"
         print_stage(stage, verbose)
-        code_folder = output_dir + "/code/mixed"
+        code_folder = output_dir + "/code/wrapper"
         visit_dnn_app(dnn, architecture, dnn_inf_model, code_folder)
 
     except Exception as e:
-        print("Mixed (ARM-CL CPU + TensorRT GPU) code generation error: " + str(e))
+        print("Wrapper code generation error: " + str(e))
         traceback.print_tb(e.__traceback__)
 
 
 if __name__ == "__main__":
     main()
+

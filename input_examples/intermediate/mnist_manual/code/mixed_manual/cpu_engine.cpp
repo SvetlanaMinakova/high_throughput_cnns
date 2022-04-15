@@ -81,7 +81,7 @@ void cpu_engine::main(void *vpar) {
        auto startTime = std::chrono::high_resolution_clock::now();
   	for(int img =0; img<frames; img++){
              //read
-             if ( IP0_tokens > 0 )
+             if (IP0_tokens>0)
                readSWF_CPU(in_buf_ptr->fifo, &input[0], IP0_tokens, in_buf_ptr->fifo_size);
                 //std::cout<<"CPU ENGINE "<<this->name<<" reads "<<IP0_tokens<<" from input buffer of size "<<in_buf_ptr->fifo_size<<std::endl;
 

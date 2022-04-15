@@ -144,6 +144,8 @@ void Subnet::main(void *thread_par) {
             updateLocks.push_back(std::move(lock));
         }
 
+        std::cout<<"Locks created!"<<std::endl;
+
         // perform reading
         for (auto bufPtr: inputBufferPtrs){
             bufPtr->read();

@@ -6,9 +6,9 @@
 #define SH_BUF_JETSON_SDFPROCESS_H
 
 #include <string>
-#include "buffers/SharedBuffer.h"
-#include "buffers/SingleBuffer.h"
-#include "buffers/DoubleBuffer.h"
+#include "SharedBuffer.h"
+#include "SingleBuffer.h"
+#include "DoubleBuffer.h"
 #include <vector>
 #include <memory>
 #include <shared_mutex>

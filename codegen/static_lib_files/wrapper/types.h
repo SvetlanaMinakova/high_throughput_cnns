@@ -20,7 +20,7 @@ struct ThreadInfo{
     // std::vector<fifo_buf*> fifo_refs;
 };
 
-// void setaffinity(int core);
+void setaffinity(int core);
 
 
 #endif //SH_BUF_JETSON_TYPES_H

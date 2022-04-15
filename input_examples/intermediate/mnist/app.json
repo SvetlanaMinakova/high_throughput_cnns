@@ -30,24 +30,12 @@
       "size": 1568,
       "users": ["external_Pooling66_Convolution110"],
       "type": "double_buffer",
-      "subtype": "out"
+      "subtype": "none"
     },    {
       "name": "B1",
-      "size": 1568,
-      "users": ["external_Pooling66_Convolution110"],
-      "type": "double_buffer",
-      "subtype": "in"
-    },    {
-      "name": "B2",
       "size": 3136,
       "users": ["external_Convolution110_Pooling160"],
       "type": "double_buffer",
-      "subtype": "out"
-    },    {
-      "name": "B3",
-      "size": 3136,
-      "users": ["external_Convolution110_Pooling160"],
-      "type": "double_buffer",
-      "subtype": "in"
+      "subtype": "none"
     }]
 }
