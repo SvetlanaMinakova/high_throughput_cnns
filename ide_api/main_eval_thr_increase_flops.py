@@ -6,9 +6,9 @@ from fileworkers.onnx_fw import onnx_file_paths_in_directory
 from util import get_project_root
 
 """ 
- Estimate throughput increase, achieved by efficient mapping of 
+ Estimate additional increase, achieved by efficient mapping of 
  computations within a DNN onto computational resources of an edge platform
- Use FLOPS-based throughput evaluation
+ Use FLOPS-based additional evaluation
 """
 
 

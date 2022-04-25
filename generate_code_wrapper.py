@@ -2,6 +2,7 @@ import argparse
 import traceback
 import os
 import sys
+import json
 
 # Example
 # python generate_code_wrapper.py --cnn ./input_examples/dnn/mnist.onnx -p ./input_examples/architecture/jetson.json -a ./input_examples/intermediate/mnist/app.json -o ./output/mnist
@@ -19,6 +20,7 @@ def main():
     from models.dnn_model.transformation.ops_fusion import fuse_built_in
     from converters.json_converters.json_to_dnn_inf_model import json_to_dnn_inf_model
     from codegen.wrapper.wrapper_dnn_visitor import visit_dnn_app
+    from eval.latency.measurements.dnn_inf_app_subnets_latency import get_latency_per_subnet
     from util import print_stage
 
     # general arguments
@@ -55,6 +57,14 @@ def main():
     parser.add_argument('-o', metavar='--out-dir', type=str, action='store', default="./output",
                         help='path to output files directory')
 
+    parser.add_argument('-e', metavar='--eval-path', type=str, action='store', default=None,
+                        help='path to per-layer cnn execution time (latency) evaluation (JSON). '
+                             'Use ./sdf_latency_eval_template.py script to generate a template for this file.'
+                             'If this file used, execution primitive of every Subnet node in the wrapper code will be '
+                             'delayed by respective time, enabling for timed representation of final '
+                             'application. Otherwise, the representation is untimed (execution primitive of every '
+                             'Subnet node will take ~0 seconds)')
+
     # general flags
     parser.add_argument("--silent", help="do not provide print-out for the script steps", action="store_true", default=False)
 
@@ -65,6 +75,7 @@ def main():
         platform_path = args.p
         app_path = args.a
 
+        eval_path = args.e
         output_dir = args.o
         silent = args.silent
         verbose = not silent
@@ -92,12 +103,18 @@ def main():
         stage = "Reading DNN inference model"
         print_stage(stage, verbose)
         dnn_inf_model = json_to_dnn_inf_model(app_path)
-        # print(mapping)
+
+        # evaluate execution time of every sub-network (partition)
+        time_per_subnet = {}
+        if eval_path is not None:
+            stage = "Read per-layer execution time (latency) eval table"
+            print_stage(stage, verbose)
+            time_per_subnet = get_latency_per_subnet(eval_path, dnn_inf_model)
 
         stage = "Generating wrapper code"
         print_stage(stage, verbose)
         code_folder = output_dir + "/code/wrapper"
-        visit_dnn_app(dnn, architecture, dnn_inf_model, code_folder)
+        visit_dnn_app(dnn, architecture, dnn_inf_model, code_folder, time_per_subnet)
 
     except Exception as e:
         print("Wrapper code generation error: " + str(e))

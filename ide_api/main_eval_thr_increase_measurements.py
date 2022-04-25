@@ -5,9 +5,9 @@ import os
 import sys
 
 """ 
- Estimate throughput increase, achieved by efficient mapping of 
+ Estimate additional increase, achieved by efficient mapping of 
  computations within a DNN onto computational resources of an edge platform
- Use real measurements for throughput evaluation 
+ Use real measurements for additional evaluation 
 """
 
 

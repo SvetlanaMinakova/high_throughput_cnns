@@ -1,22 +1,30 @@
 from codegen.codegen_visitor import CodegenVisitor
 from models.dnn_model.dnn import DNN
-import traceback
 
 
-def visit_dnn(dnn: DNN, directory, proc_type="CPU"):
+def visit_dnn(dnn: DNN, directory, proc_type, exec_time_ms):
+    """
+    Visit a dnn
+    :param dnn: DNN to visit
+    :param directory: directory to generate code in
+    :param proc_type: type of processor, where the dnn is executed
+    :param exec_time_ms: expected dnn execution time (in milliseconds)
+    :return:
+    """
     filepath = directory + "/" + dnn.name + ".h"
     with open(filepath, "w") as print_file:
-        visitor = DNNWrapperHVisitor(dnn, print_file, proc_type)
+        visitor = DNNWrapperHVisitor(dnn, print_file, proc_type, exec_time_ms)
         visitor.visit()
 
 
 class DNNWrapperHVisitor(CodegenVisitor):
-    def __init__(self, dnn: DNN, print_file, proc_type):
+    def __init__(self, dnn: DNN, print_file, proc_type, exec_time_ms: int):
         """
         Create new H-code visitor of a DNN/DNN partition
         :param dnn: DNN to visit
         :param print_file: open file to print CPP code of the DNN
-        :param proc_type: type of target processor
+        :param proc_type: type of processor, where the dnn is executed
+        :param exec_time_ms: expected dnn execution time (in milliseconds)
         """
         super().__init__(print_file, prefix="")
         self.dnn = dnn
@@ -25,6 +33,7 @@ class DNNWrapperHVisitor(CodegenVisitor):
         self.output_layer = self.dnn.get_output_layer()
         self.class_name = dnn.name
         self.base_class_name = "Subnet"
+        self.exec_time_ms = exec_time_ms
 
     def visit(self):
         self._write_common_beginning()
@@ -49,8 +58,9 @@ class DNNWrapperHVisitor(CodegenVisitor):
         self.prefix_dec()
 
     def _write_constructor(self):
-        self.write_line("explicit " + self.class_name + "(int runs=1, int execDelayMS=0, int rwDelayMS=0): " +
-                        self.base_class_name + "(\"" + self.class_name + "\", runs, execDelayMS, rwDelayMS){}")
+        self.write_line("explicit " + self.class_name + "(int runs=1, int execDelayMS=" + str(self.exec_time_ms) +
+                        ", int rwDelayMS=0): " + self.base_class_name +
+                        "(\"" + self.class_name + "\", runs, execDelayMS, rwDelayMS){}")
 
     def _write_common_end(self):
         """

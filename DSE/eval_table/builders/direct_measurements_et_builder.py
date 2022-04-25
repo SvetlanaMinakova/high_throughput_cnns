@@ -1,4 +1,3 @@
-from models.edge_platform.Architecture import get_jetson
 from converters.json_converters.json_task_graph import parse_task_graph_json
 import json
 
@@ -16,7 +15,7 @@ def build_from_eval_and_tg_paths(task_graph_path, eval_path, architecture):
     return et
 
 
-def build_eval_table(json_eval, processor_types_distinct, app_graph):
+def build_eval_table(json_eval, processor_types_distinct, task_graph):
     """
     Build evaluations table from .json file, containing direct measurements on the platform
     :param json_eval: .json evaluations file. File should contain fields with evaluations
@@ -24,7 +23,7 @@ def build_eval_table(json_eval, processor_types_distinct, app_graph):
         example of vgg19 json_eval file is in /data/e0.json
     :param processor_types_distinct distinct types of processors, available
     on the platform (e.g. small_CPU, large_CPU, GPU)
-    :param app_graph: application graph
+    :param task_graph: application graph
     """
     eval_table = []
     with open(json_eval, 'r') as file:
@@ -40,12 +39,12 @@ def build_eval_table(json_eval, processor_types_distinct, app_graph):
             for proc_type in processor_types_distinct:
 
                 if proc_type not in evals:
-                    raise Exception(proc_type, "eval_table not found!")
+                    raise Exception(proc_type, " latency evaluations not found!")
 
                 proc_eval = evals[proc_type]
 
                 if proc_type == "GPU":
-                    proc_eval = restore_gpu_evals(proc_eval, evals["layers"], app_graph)
+                    proc_eval = restore_gpu_evals_for_task_graph(proc_eval, evals["layers"], task_graph)
 
                 eval_table[proc_id] = proc_eval
                 proc_id = proc_id + 1
@@ -53,7 +52,7 @@ def build_eval_table(json_eval, processor_types_distinct, app_graph):
     return eval_table
 
 
-def restore_gpu_evals(proc_eval, gpu_eval_names, app_graph):
+def restore_gpu_evals_for_task_graph(proc_eval, gpu_eval_names, app_graph):
     """
     Fill with 0 time evaluations of nodes, merged to the parent nodes by tensorrt
     (such as BN or ReLU nodes)

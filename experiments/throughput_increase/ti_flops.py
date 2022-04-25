@@ -1,15 +1,15 @@
 from util import milli
 
 """
-Increase dnn throughput, using efficient dnn_partitioning, mapping and scheduling, and
-FLOPS-based latency/throughput evaluation
+Increase dnn additional, using efficient dnn_partitioning, mapping and scheduling, and
+FLOPS-based latency/additional evaluation
 The experiment corresponds to Chapter 3
 """
 
 
 def increase_dnn_throughput(dnn, architecture, built_in_ops, ga_conf_path=None, token_size=4):
     """
-    Eval dnn throughput increase
+    Eval dnn additional increase
     :param architecture target platform architecture
     :param dnn: dnn model to reduce memory
     :param built_in_ops: list of built-in (fused) ops, which have zero-buffers
@@ -23,8 +23,8 @@ def increase_dnn_throughput(dnn, architecture, built_in_ops, ga_conf_path=None, 
     """
 
     # imports
-    from DSE.eval_table.flops_et_builder import build_flops_time_eval_table
-    from converters.dnn_to_task_graph import dnn_to_task_graph_with_built_in, dnn_to_task_graph
+    from DSE.eval_table.builders.flops_et_builder import build_flops_time_eval_table
+    from converters.dnn_to_task_graph import dnn_to_task_graph
     from DSE.mapping.ga import GA
     from DSE.mapping.greedy_mapping import map_greedy
     from converters.json_converters.json_ga_conf_parser import parse_ga_conf
@@ -95,20 +95,20 @@ def increase_dnn_throughput(dnn, architecture, built_in_ops, ga_conf_path=None, 
     print("model latency reduction (model =", dnn.name, ") : ")
     print()
     print(" - layer-by-layer on", architecture.src_and_dst_processor_types[accelerator_id])
-    print("      latency: ", round(lat_ms_sequential, 2), "; throughput: ", round(thr_fps_sequential, 2), "fps")
+    print("      latency: ", round(lat_ms_sequential, 2), "; additional: ", round(thr_fps_sequential, 2), "fps")
     # print()
     print(" - greedy pipeline:")
-    print("      latency: ", round(lat_ms_greedy, 2), "; throughput: ", round(thr_fps_greedy, 2), "fps",
+    print("      latency: ", round(lat_ms_greedy, 2), "; additional: ", round(thr_fps_greedy, 2), "fps",
           "; speed-up: ", round(speed_up_perc_greedy, 2), "%")
     if ga_executed:
         print(" - ga-based pipeline:")
-        print("      latency: ", round(lat_ms_ga, 2), "; throughput: ", round(thr_fps_ga, 2), "fps",
+        print("      latency: ", round(lat_ms_ga, 2), "; additional: ", round(thr_fps_ga, 2), "fps",
               "; speed-up: ", round(speed_up_perc_ga, 2), "%")
     print()
 
 
 def lat_ms_to_thr_fps(lat_ms):
-    """ Convert latency in milliseconds (ms) into throughput in frames per second (fps)"""
+    """ Convert latency in milliseconds (ms) into additional in frames per second (fps)"""
     if lat_ms == 0:
         return 0
     thr = 1/(lat_ms * float(milli()))

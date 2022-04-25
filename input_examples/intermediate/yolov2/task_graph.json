@@ -1,9 +1,0 @@
-{
-  "name": "yolov2",
-  "tasks": ["l_0","l_1","l_2_3_4","l_5","l_6_7_8","l_9","l_10_11_12","l_13","l_14_15_16","l_17","l_18_19_20","l_21","l_22_23_24","l_25","l_26_27_28","l_29_30_31","l_32"],
-  "tasks_num": 17,
-  "tasks_adjacent_list": [[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15],[16],[]],
-  "tasks_reverse_adjacent_list": [[],[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15]],
-  "tasks_out_comm_cost": [519168,519168,2768896,692224,1384448,346112,692224,173056,346112,86528,173056,43264,86528,86528,173056,173056,21125],
-  "jobs_per_task": [["Mul"],["Add"],["convolution","batchnorm","activation"],["pooling"],["convolution1","batchnorm1","activation1"],["pooling1"],["convolution2","batchnorm2","activation2"],["pooling2"],["convolution3","batchnorm3","activation3"],["pooling3"],["convolution4","batchnorm4","activation4"],["pooling4"],["convolution5","batchnorm5","activation5"],["pooling5"],["convolution6","batchnorm6","activation6"],["convolution7","batchnorm7","activation7"],["convolution8"]]
-}

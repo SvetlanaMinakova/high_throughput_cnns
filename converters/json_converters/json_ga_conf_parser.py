@@ -3,7 +3,7 @@ from converters.json_converters.json_util import extract_or_default
 
 
 def parse_ga_conf(path):
-    """ Parse high-throughput GA config """
+    """ Parse high-additional GA config """
     with open(path, 'r') as file:
         if file is None:
             raise FileNotFoundError

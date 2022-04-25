@@ -36,7 +36,7 @@ def visit_dnn_app(dnn: DNN,
     codegen_flags = []
 
     # attributes
-    class_names_in_exec_order = [partition["name"] for partition in dnn_inf_model.partitions]
+    class_names_in_exec_order = [partition["name"] for partition in dnn_inf_model.json_partitions]
     gpu_partition_class_names = get_gpu_partition_class_names(dnn_inf_model)
     # everything that is not executed on the GPU is executed on the CPU
     cpu_partition_class_names = [name for name in class_names_in_exec_order if name not in gpu_partition_class_names]
@@ -97,7 +97,7 @@ def get_gpu_partition_class_names(dnn_inf_model):
     :return: array[str] of names of dnn partitions, executed on platform GPU(s)
     """
     gpu_partition_names = []
-    for partition in dnn_inf_model.partitions:
+    for partition in dnn_inf_model.json_partitions:
         if partition["processor_type"] in ["GPU", "gpu"]:
             gpu_partition_names.append(partition["name"])
     return gpu_partition_names
@@ -112,7 +112,7 @@ def get_cpu_cores_allocation(dnn_inf_model):
     :return: allocation of CPU cores to DNN partitions: dictionary with
     key = partition name, value = core_id.
     """
-    cpu_cores_allocation = {partition["name"]: partition["processor_id"] for partition in dnn_inf_model.partitions}
+    cpu_cores_allocation = {partition["name"]: partition["processor_id"] for partition in dnn_inf_model.json_partitions}
     return cpu_cores_allocation
 
 

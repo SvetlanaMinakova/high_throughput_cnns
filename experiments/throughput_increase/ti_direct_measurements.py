@@ -1,15 +1,15 @@
 from util import milli
 
 """
-Evaluate increase of a dnn throughput, using efficient dnn_partitioning, mapping and scheduling, and
-Direct measurements based latency/throughput evaluation
+Evaluate increase of a dnn additional, using efficient dnn_partitioning, mapping and scheduling, and
+Direct measurements based latency/additional evaluation
 The experiment corresponds to Chapter 3
 """
 
 
 def increase_dnn_throughput(dnn_name, architecture, task_graph_path, eval_path, ga_conf_path=None):
     """
-    Eval dnn throughput increase
+    Eval dnn additional increase
     :param architecture target platform architecture
     :param dnn_name: dnn model name
     :param task_graph_path: path to DNN task graph, saved in json format
@@ -19,7 +19,7 @@ def increase_dnn_throughput(dnn_name, architecture, task_graph_path, eval_path, 
     """
 
     # imports
-    from DSE.eval_table.direct_measurements_et_builder import build_eval_table
+    from DSE.eval_table.builders.direct_measurements_et_builder import build_eval_table
     from converters.json_converters.json_task_graph import parse_task_graph_json
     from DSE.mapping.ga import GA
     from DSE.mapping.greedy_mapping import map_greedy
@@ -90,20 +90,20 @@ def increase_dnn_throughput(dnn_name, architecture, task_graph_path, eval_path, 
     print("model latency reduction (model =", dnn_name, ") : ")
     print()
     print(" - layer-by-layer on", architecture.src_and_dst_processor_types[accelerator_id])
-    print("      latency: ", round(lat_ms_sequential, 2), "; throughput: ", round(thr_fps_sequential, 2), "fps")
+    print("      latency: ", round(lat_ms_sequential, 2), "; additional: ", round(thr_fps_sequential, 2), "fps")
     # print()
     print(" - greedy pipeline:")
-    print("      latency: ", round(lat_ms_greedy, 2), "; throughput: ", round(thr_fps_greedy, 2), "fps",
+    print("      latency: ", round(lat_ms_greedy, 2), "; additional: ", round(thr_fps_greedy, 2), "fps",
           "; speed-up: ", round(speed_up_perc_greedy, 2), "%")
     if ga_executed:
         print(" - ga-based pipeline:")
-        print("      latency: ", round(lat_ms_ga, 2), "; throughput: ", round(thr_fps_ga, 2), "fps",
+        print("      latency: ", round(lat_ms_ga, 2), "; additional: ", round(thr_fps_ga, 2), "fps",
               "; speed-up: ", round(speed_up_perc_ga, 2), "%")
     print()
 
 
 def lat_ms_to_thr_fps(lat_ms):
-    """ Convert latency in milliseconds (ms) into throughput in frames per second (fps)"""
+    """ Convert latency in milliseconds (ms) into additional in frames per second (fps)"""
     if lat_ms == 0:
         return 0
     thr = 1/(lat_ms * float(milli()))

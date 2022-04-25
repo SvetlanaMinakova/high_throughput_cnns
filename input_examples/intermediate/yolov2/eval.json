@@ -1,6 +1,0 @@
-{
-"layers": ["convolution_activation", "pooling", "convolution1_activation1", "pooling1", "convolution2_activation2", "pooling2", "convolution3_activation3", "pooling3", "convolution4_activation4", "pooling4", "convolution5_activation5", "pooling5", "convolution6_activation6", "convolution7_activation7", "convolution8"], 
-"GPU": [1.48909, 0.475147, 0.999403, 0.244777, 0.697649, 0.119007, 0.438943, 0.0511808, 0.528682, 0.0303213, 0.512248, 0.0271456, 0.923424, 1.04703, 0.0448653],
-"large_CPU" : [45.5547, 39.7929, 84.8177, 99.0736, 40.3078, 44.0953, 22.1543, 24.726, 15.7267, 10.6756, 11.759, 5.20283, 18.9029, 2.1494, 73.8596, 153.779, 3.64817], 
-"small_CPU" : [129.367, 127.705, 130.772, 175.898, 83.1047, 84.5125, 44.4674, 40.2925, 26.7012, 18.6157, 16.1689, 8.66383, 16.1639, 3.73076, 54.6493, 101.555, 3.51228]
-}

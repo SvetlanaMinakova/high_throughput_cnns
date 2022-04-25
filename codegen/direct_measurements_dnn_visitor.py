@@ -10,7 +10,7 @@ from dnn_partitioning.before_mapping.partition_dnn_with_task_graph import partit
 def visit_dnn(dnn: DNN, code_dir, built_in, verbose=True):
     """
     Generate CPU/GPU code for direct measurements
-    of DNN per-layer throughput/latency/energy on the platform
+    of DNN per-layer additional/latency/energy on the platform
     :param dnn: DNN, represented as (analysis) DNN model
     :param code_dir: output code directory
     :param built_in: list of built-in operators

@@ -88,7 +88,7 @@ def get_task_graph(dnn, task_graph_path=None, verbose=False):
     :return: DNN task graph
     """
     # imports
-    from converters.dnn_to_task_graph import dnn_to_task_graph_with_built_in, dnn_to_task_graph
+    from converters.dnn_to_task_graph import dnn_to_task_graph
     from converters.json_converters.json_task_graph import parse_task_graph_json
 
     if task_graph_path is None:
@@ -112,13 +112,13 @@ def get_time_eval_table(dnn, dnn_task_graph, architecture, eval_type="flops", ev
     :param architecture: target platform architecture
     :param eval_type: type of evaluation: FLOPs or measurements on the platform
     :param eval_path path to direct measurements of per-layer DNN latency. required for eval_type="measurements". If == None,
-        FLOPS-based latency/throughput evaluation will be used instead
+        FLOPS-based latency/additional evaluation will be used instead
     :param verbose: flag. if True, print details
     :return: per-layer execution time (latency) evaluation matrix
     """
     # imports
-    from DSE.eval_table.flops_et_builder import build_flops_time_eval_table
-    from DSE.eval_table.direct_measurements_et_builder import build_eval_table
+    from DSE.eval_table.builders.flops_et_builder import build_flops_time_eval_table
+    from DSE.eval_table.builders.direct_measurements_et_builder import build_eval_table
 
     if eval_type == "measurements":
         if eval_path is None:

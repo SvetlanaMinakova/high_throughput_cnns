@@ -1,5 +1,5 @@
 from DSE.mapping.chromosome import Chromosome
-from DSE.eval_table.throughput.communication_penalty import get_communication_penalty
+from DSE.eval_table.additional.communication_penalty import get_communication_penalty
 import operator
 import random
 from models.TaskGraph import TaskGraph

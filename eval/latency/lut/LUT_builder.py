@@ -4,8 +4,8 @@ DNN layers for LUT-based power/perf DNN evaluation.
 For memory/traverse time efficiency the DNN LUT is represented
 as a treeMap of fixed height. The LUT can be printed as table, if needed.
 """
-from dnn_model.dnn import DNN, Layer
-from converters.parsers.json_benchmark_parser import parse_jetson_bm_as_annotated_dnn
+from models.dnn_model.dnn import DNN, Layer
+from converters.json_converters.json_benchmark_parser import parse_jetson_bm_as_annotated_dnn
 
 
 def build_lut_tree_from_jetson_benchmark(bm_path):

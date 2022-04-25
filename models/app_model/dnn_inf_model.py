@@ -1,4 +1,5 @@
 from models.dnn_model.dnn import DNN
+from models.app_model.InterDNNConnection import InterDNNConnection
 from models.edge_platform.Architecture import Architecture
 from models.TaskGraph import TaskGraph
 from models.data_buffers import DataBuffer
@@ -10,15 +11,22 @@ class DNNInferenceModel:
     """
     Final DNN inference execution model
     Attributes:
-        schedule type: type of schedule between partitions: sequential (one-by-one) or pipelined
+        schedule_type: type of schedule between partitions: sequential (one-by-one) or pipelined
+        json_partitions: list of json descriptions (dictionaries), where each description corresponds to a
+            dnn sub-network (partition)
+        json_connections: list of json descriptions (dictionaries), where each description corresponds to a
+            connection between dnn partitions
+        inter_partition_buffers: list of buffers (each defined as an object of DataBuffer class) that store
+            data exchanged between the dnn partitions during the application execution
     """
-    def __init__(self, schedule_type: DNNScheduling, partitions, connections, inter_partition_buffers):
-        """
-        # TODO: implement buffers reuse
-        """
+    def __init__(self, schedule_type: DNNScheduling,
+                 partitions: [DNN],
+                 connections: [InterDNNConnection],
+                 inter_partition_buffers):
+
         self.schedule_type = schedule_type
-        self.partitions = partitions
-        self.connections = connections
+        self.json_partitions = partitions
+        self.json_connections = connections
         self.inter_partition_buffers = inter_partition_buffers
 
 
@@ -40,7 +48,6 @@ def generate_dnn_inference_model(dnn: DNN,
          :param schedule_type: type of schedule between CNN partitions:
             - sequential: partitions are executed one-by-one
             - pipeline: partitions are executed in a parallel pipelined fashion
-        # TODO: implement buffers reuse
         :return DNNInferenceModel class object
         """
 

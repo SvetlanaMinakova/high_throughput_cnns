@@ -22,11 +22,10 @@ def main():
     # import project modules
     from util import print_stage
     from converters.json_converters.json_to_architecture import json_to_architecture
-    from DSE.mapping.map_and_partition import get_mapping, get_partitioning
-    from DSE.eval_table.direct_measurements_et_builder import build_eval_table
+    from DSE.mapping.map_and_partition import get_mapping
+    from DSE.eval_table.builders.direct_measurements_et_builder import build_eval_table
     from converters.json_converters.json_task_graph import parse_task_graph_json
     from converters.json_converters.mapping_to_json import mapping_to_json
-    from converters.json_converters.partitioning_to_json import partitioning_to_json
     from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
     from models.dnn_model.dnn import set_built_in
     from models.dnn_model.transformation.ops_fusion import fuse_built_in

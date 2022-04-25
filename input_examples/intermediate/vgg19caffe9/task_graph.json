@@ -1,9 +1,0 @@
-{
-  "name": "vgg19-caffe9",
-  "tasks": ["l_0_1","l_2_3","l_4","l_5_6","l_7_8","l_9","l_10_11","l_12_13","l_14_15","l_16_17","l_18","l_19_20","l_21_22","l_23_24","l_25_26","l_27","l_28_29","l_30_31","l_32_33","l_34_35","l_36_37","l_38_39_40","l_41_42_43","l_44","l_45"],
-  "tasks_num": 25,
-  "tasks_adjacent_list": [[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15],[16],[17],[18],[19],[20],[21],[22],[23],[24],[]],
-  "tasks_reverse_adjacent_list": [[],[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10],[11],[12],[13],[14],[15],[16],[17],[18],[19],[20],[21],[22],[23]],
-  "tasks_out_comm_cost": [3211264,3211264,802816,1605632,1605632,401408,802816,802816,802816,802816,200704,401408,401408,401408,401408,100352,100352,100352,100352,100352,25088,4096,4096,1000,1000],
-  "jobs_per_task": [["conv0","activation1"],["conv2","activation3"],["pool4"],["conv5","activation6"],["conv7","activation8"],["pool9"],["conv10","activation11"],["conv12","activation13"],["conv14","activation15"],["conv16","activation17"],["pool18"],["conv19","activation20"],["conv21","activation22"],["conv23","activation24"],["conv25","activation26"],["pool27"],["conv28","activation29"],["conv30","activation31"],["conv32","activation33"],["conv34","activation35"],["pool36","skip37"],["gemm38","activation39","skip40"],["gemm41","activation42","skip43"],["gemm44"],["Softmax45"]]
-}

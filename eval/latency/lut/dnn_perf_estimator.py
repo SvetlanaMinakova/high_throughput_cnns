@@ -4,7 +4,7 @@ The estimation of latency and energy is performed using one of the
 following estimation methods: 'ops', 'lut', 'sroof' or 'aloha'
 """
 
-from techniques.scheduling.pipeline_greedy import map_greedy_pipeline, get_jetson, get_sum_proc_time
+from DSE.mapping.greedy_mapping import map_greedy_pipeline, get_jetson, get_sum_proc_time
 from techniques.scheduling.sequential_greedy import map_greedy_sequenatial
 from converters.dnn_to_task_graph import dnn_to_task_graph
 from eval.throughput.eval_matrix_builder import build_time_eval_matrix

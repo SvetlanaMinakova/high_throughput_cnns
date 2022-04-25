@@ -47,7 +47,7 @@ class DNNPartitioner:
 
     def __create_partitions(self):
         self.__partitions = []
-        for partition_desc in self.dnn_inf_model.partitions:
+        for partition_desc in self.dnn_inf_model.json_partitions:
             layer_names = partition_desc["layers"]
             partition = self.__create_partition(partition_desc["name"], layer_names)
             self.__partitions.append(partition)
@@ -140,7 +140,7 @@ class DNNPartitioner:
         layer = self.layers[layer_id]
         layer_name = layer.name
         partition_id = 0
-        for partition_desc in self.dnn_inf_model.partitions:
+        for partition_desc in self.dnn_inf_model.json_partitions:
             if layer_name in partition_desc["layers"]:
                 return partition_id
             partition_id += 1

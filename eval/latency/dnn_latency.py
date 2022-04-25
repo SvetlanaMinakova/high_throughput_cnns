@@ -6,7 +6,7 @@ def eval_latency_sequential(eval_table, architecture, mapping):
     :param architecture: target platform architecture
     :return: latency of a DNN, executed sequentially
     """
-    from DSE.eval_table.eval_dnn_latency_from_et import get_sum_proc_times
+    from eval.latency.measurements.dnn_latency_eval_table import get_sum_proc_times
     times_per_proc = get_sum_proc_times(mapping, architecture, eval_table)
 
     # aggregate
@@ -22,7 +22,7 @@ def eval_latency_pipeline(eval_table, architecture, mapping):
     :param architecture: target platform architecture
     :return: latency of a DNN, executed sequentially
     """
-    from DSE.eval_table.eval_dnn_latency_from_et import get_sum_proc_times
+    from eval.latency.measurements.dnn_latency_eval_table import get_sum_proc_times
     times_per_proc = get_sum_proc_times(mapping, architecture, eval_table)
     latency = max(times_per_proc)
     return latency

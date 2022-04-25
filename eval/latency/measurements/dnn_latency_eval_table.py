@@ -1,5 +1,5 @@
 def get_sum_proc_times(mapping, architecture, time_eval_matrix):
-    """Get total execution time per processor"""
+    """Get total execution time for every processor in architecture"""
     sum_proc_times = []
     proc_id = 0
     for proc_tasks in mapping:
@@ -23,3 +23,4 @@ def get_sum_proc_time(eval_table, proc_tasks, proc_type_id):
 def get_pipeline_execution_proc_time(sum_proc_times):
     """ Get time, required for processors to run concurrently"""
     return max(sum_proc_times)
+

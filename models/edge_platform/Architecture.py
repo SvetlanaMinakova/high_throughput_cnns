@@ -89,7 +89,7 @@ def get_jetson():
     # list of accelerators
     jetson.accelerators.append("GPU")
 
-    # max flops for every type of processor: needed for flop-based throughput evaluation
+    # max flops for every type of processor: needed for flop-based additional evaluation
     # FLOPS are computed using NVIDIA docs (for GPU) and https://en.wikipedia.org/wiki/FLOPS for CPU
     gpu_glops = 250 # 667: 667 is max, but GPU is never fully occupied due to registers limitation
     large_cpu_gflops = 16.28
