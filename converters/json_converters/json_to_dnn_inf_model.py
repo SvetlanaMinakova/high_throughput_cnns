@@ -20,8 +20,8 @@ def json_to_dnn_inf_model(path: str):
             # parse fields
             schedule_type_str = extract_or_default(json_dnn_inf_model, "schedule_type", "PIPELINE")
             schedule_type = str_to_scheduling(schedule_type_str)
-            partitions = extract_or_default(json_dnn_inf_model, "partitions", [])
-            connections = extract_or_default(json_dnn_inf_model, "connections", [])
+            partitions = extract_or_default(json_dnn_inf_model, "json_partitions", [])
+            connections = extract_or_default(json_dnn_inf_model, "json_connections", [])
 
             inter_partition_buffers = []
             inter_partition_buffers_desc = extract_or_default(json_dnn_inf_model, "inter_partition_buffers", [])

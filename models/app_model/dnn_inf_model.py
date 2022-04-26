@@ -1,3 +1,4 @@
+import functools # for custom-key comparison among objects
 from models.dnn_model.dnn import DNN
 from models.app_model.InterDNNConnection import InterDNNConnection
 from models.edge_platform.Architecture import Architecture
@@ -54,7 +55,7 @@ def generate_dnn_inference_model(dnn: DNN,
     def _generate_partitions_description():
         partitions_desc = []
         partition_name_to_proc_id = partitioner.partition_name_to_proc_id
-        for partition in partitioner.get_partitions():
+        for partition in sorted_partitions:
             name = partition.name
             processor_id = partition_name_to_proc_id[name]
             processor_type = architecture.processors_types[processor_id]
@@ -67,7 +68,7 @@ def generate_dnn_inference_model(dnn: DNN,
 
     def _generate_connections_description():
         connections_desc = []
-        for connection in partitioner.get_inter_partition_connections():
+        for connection in sorted_connections:
             json_connection = {"name": connection.name,
                                "src": connection.src.name,
                                "dst": connection.dst.name}
@@ -87,7 +88,7 @@ def generate_dnn_inference_model(dnn: DNN,
         an input buffer for data-consuming partition and an output buffer for data-producing partition
         """
         inter_partition_buf.clear()
-        for connection in partitioner.get_inter_partition_connections():
+        for connection in sorted_connections:
             # double-buffer
             buffer_name = "B" + str(len(inter_partition_buf))
             buffer_size = connection.data_w * connection.data_h * connection.data_ch
@@ -114,22 +115,81 @@ def generate_dnn_inference_model(dnn: DNN,
             buffer.type = "single_buffer"
             inter_partition_buffers.append(buffer)
 
+    def get_layer_id_in_dnn(layer_name):
+        layer = dnn.find_layer_by_name(layer_name)
+        layer_id = -1 if layer is None else layer.id
+        return layer_id
+
+    def compare_partitions_by_pos_in_dnn(partition1: DNN, partition2: DNN):
+        """
+        Compare two dnn partitions by their position in the dnn
+        :param partition1: first partition
+        :param partition2: second partition
+        :return: -1, 1 or 0 depending on the results of comparison
+        """
+        partition1_start_layer_id = get_layer_id_in_dnn(partition1.get_layers()[0].name)
+        partition2_start_layer_id = get_layer_id_in_dnn(partition2.get_layers()[0].name)
+
+        if partition1_start_layer_id < partition2_start_layer_id:
+            return -1
+
+        if partition1_start_layer_id > partition2_start_layer_id:
+            return 1
+
+        # partition1_start_layer_id == partition2_start_layer_id
+
+        partition1_end_layer_id = get_layer_id_in_dnn(partition1.get_layers()[-1].name)
+        partition2_end_layer_id = get_layer_id_in_dnn(partition2.get_layers()[-1].name)
+
+        if partition1_end_layer_id < partition2_end_layer_id:
+            return -1
+
+        if partition1_end_layer_id > partition2_end_layer_id:
+            return 1
+
+        # partition1_start_layer_id == partition2_start_layer_id and partition1_end_layer_id == partition2_end_layer_id
+        return 0
+
+    def compare_connections_by_pos_in_dnn(connection1: InterDNNConnection, connection2: InterDNNConnection):
+        # compare by source
+        src_comparison = compare_partitions_by_pos_in_dnn(connection1.src, connection2.src)
+        if src_comparison != 0:
+            return src_comparison
+
+        # if partitions are equal by source, compare by destination
+        dst_comparison = compare_partitions_by_pos_in_dnn(connection1.dst, connection2.dst)
+        return dst_comparison
+
+    ########################
+    # main part of the script
+
     # generate partitions and connections between them
     partitioner = DNNPartitioner(dnn, task_graph, mapping)
     partitioner.partition()
     # print("  - DNN is partitioned")
 
-    # describe every partition (task)
-    partitions = _generate_partitions_description()
+    sorted_partitions = sorted(partitioner.get_partitions(),
+                               key=functools.cmp_to_key(compare_partitions_by_pos_in_dnn))
+
+    sorted_connections = sorted(partitioner.get_inter_partition_connections(),
+                                key=functools.cmp_to_key(compare_connections_by_pos_in_dnn))
+
+    # create .json description of partitions
+    json_partitions = _generate_partitions_description()
     # print("  - Final app model partitions generated")
 
-    # create .json connections between partitions
-    connections = _generate_connections_description()
+    # create .json description of connections between partitions
+    json_connections = _generate_connections_description()
+
+    # sort partitions descriptions by ids of layers within partitions
 
     # generate external buffers
     inter_partition_buffers = []
     _init_inter_partition_buffers(inter_partition_buffers)
 
-    dnn_inference_model = DNNInferenceModel(schedule_type, partitions, connections, inter_partition_buffers)
+    dnn_inference_model = DNNInferenceModel(schedule_type,
+                                            json_partitions,
+                                            json_connections,
+                                            inter_partition_buffers)
     return dnn_inference_model
 

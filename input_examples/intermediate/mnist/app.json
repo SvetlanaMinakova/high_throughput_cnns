@@ -1,22 +1,22 @@
 {
   "schedule_type": "PIPELINE",
-  "partitions": [    {
-      "name": "Subnet0",
-      "processor_id": 1,
-      "processor_type": "large_CPU",
-      "layers": ["Convolution110"]
-    },    {
+  "json_partitions": [    {
       "name": "Subnet1",
       "processor_id": 3,
       "processor_type": "small_CPU",
       "layers": ["Convolution28","Pooling66"]
+    },    {
+      "name": "Subnet0",
+      "processor_id": 1,
+      "processor_type": "large_CPU",
+      "layers": ["Convolution110"]
     },    {
       "name": "Subnet2",
       "processor_id": 5,
       "processor_type": "GPU",
       "layers": ["Pooling160","Times212"]
     }],
-  "connections": [    {
+  "json_connections": [    {
       "name": "external_Pooling66_Convolution110",
       "src": "Subnet1",
       "dst": "Subnet0"

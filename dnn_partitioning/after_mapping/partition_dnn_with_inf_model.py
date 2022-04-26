@@ -29,7 +29,7 @@ class DNNPartitioner:
     Partitions DNN into sub-graphs (partitions)
     according to the task graph, created from the DNN
     """
-    def __init__(self, dnn: DNN, dnn_inf_model):
+    def __init__(self, dnn: DNN, dnn_inf_model: DNNInferenceModel):
         self.dnn = dnn
         self.layers = dnn.get_layers()
         self.dnn_inf_model = dnn_inf_model
