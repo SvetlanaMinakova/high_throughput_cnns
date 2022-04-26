@@ -1,5 +1,5 @@
 import functools # for custom-key comparison among objects
-from models.dnn_model.dnn import DNN
+from models.dnn_model.dnn import DNN, ExternalInputConnection, ExternalOutputConnection
 from models.app_model.InterDNNConnection import InterDNNConnection
 from models.edge_platform.Architecture import Architecture
 from models.TaskGraph import TaskGraph
@@ -23,7 +23,7 @@ class DNNInferenceModel:
     def __init__(self, schedule_type: DNNScheduling,
                  partitions: [DNN],
                  connections: [InterDNNConnection],
-                 inter_partition_buffers):
+                 inter_partition_buffers: [DataBuffer]):
 
         self.schedule_type = schedule_type
         self.json_partitions = partitions
@@ -75,45 +75,48 @@ def generate_dnn_inference_model(dnn: DNN,
             connections_desc.append(json_connection)
         return connections_desc
 
-    def _init_inter_partition_buffers(inter_partition_buf):
+    def _generate_inter_partition_buffers():
+        inter_partition_buf = []
         if schedule_type == DNNScheduling.PIPELINE:
-            _init_inter_partition_buffers_pipeline(inter_partition_buf)
+            _generate_inter_partition_buffers_pipeline(inter_partition_buf)
         else:
-            _init_inter_partition_buffers_sequential(inter_partition_buf)
+            _generate_inter_partition_buffers_sequential(inter_partition_buf)
+        return inter_partition_buf
 
-    def _init_inter_partition_buffers_pipeline(inter_partition_buf):
+    def _generate_inter_partition_buffers_pipeline(inter_partition_buf, start_buf_id=0):
         """
         Generate buffers for pipelined application
         in case of pipeline schedule, every connection is associated with two buffers:
         an input buffer for data-consuming partition and an output buffer for data-producing partition
         """
-        inter_partition_buf.clear()
+        buf_id = start_buf_id
         for connection in sorted_connections:
             # double-buffer
-            buffer_name = "B" + str(len(inter_partition_buf))
+            buffer_name = "B" + str(buf_id)
             buffer_size = connection.data_w * connection.data_h * connection.data_ch
             buffer = DataBuffer(buffer_name, buffer_size)
             buffer.users.append(connection.name)
             buffer.type = "double_buffer"
-            inter_partition_buffers.append(buffer)
+            inter_partition_buf.append(buffer)
+            buf_id += 1
 
-    def _init_inter_partition_buffers_sequential(inter_partition_buf):
+    def _generate_inter_partition_buffers_sequential(inter_partition_buf, start_buf_id=0):
         """
         Generate buffers for sequential application
         in case of sequential schedule, every connection is associated with a
         single buffer, which serves as an input to data-consuming partition and as an
         output buffer for data-producing partition
         """
-        inter_partition_buf.clear()
-
+        buf_id = start_buf_id
         for connection in partitioner.get_inter_partition_connections():
             # single-buffer
-            buffer_name = "B" + str(len(inter_partition_buf))
+            buffer_name = "B" + str(buf_id)
             buffer_size = connection.data_w * connection.data_h * connection.data_ch
             buffer = DataBuffer(buffer_name, buffer_size)
             buffer.users.append(connection.name)
             buffer.type = "single_buffer"
-            inter_partition_buffers.append(buffer)
+            inter_partition_buf.append(buffer)
+            buf_id += 1
 
     def get_layer_id_in_dnn(layer_name):
         layer = dnn.find_layer_by_name(layer_name)
@@ -183,13 +186,90 @@ def generate_dnn_inference_model(dnn: DNN,
 
     # sort partitions descriptions by ids of layers within partitions
 
-    # generate external buffers
-    inter_partition_buffers = []
-    _init_inter_partition_buffers(inter_partition_buffers)
+    # generate application buffers
+    app_buffers = []
+    # DNN input buffers
+    input_buffers = generate_external_input_buffers(dnn)
+    app_buffers = app_buffers + input_buffers
+    # DNN output buffers
+    output_buffers = generate_external_output_buffers(dnn)
+    app_buffers = app_buffers + output_buffers
+    # buffers among DNN partitions
+    inter_partition_buffers = _generate_inter_partition_buffers()
+    app_buffers = app_buffers + inter_partition_buffers
 
     dnn_inference_model = DNNInferenceModel(schedule_type,
                                             json_partitions,
                                             json_connections,
-                                            inter_partition_buffers)
+                                            app_buffers)
     return dnn_inference_model
+
+
+def generate_external_input_buffers(dnn):
+    external_input_buffers = []
+    external_input_id = 0
+    buffer_subtype = "input_buffer"
+    buffer_prefix = "B_in"
+    if len(dnn.get_inputs()) > 0:
+        for external_input in dnn.get_inputs():
+            buffer_name = buffer_prefix + str(external_input_id)
+            buffer = generate_buffer_for_external_io(external_input.data_layer,
+                                                     external_input.dnn_layer.name,
+                                                     buffer_name,
+                                                     buffer_subtype)
+            external_input_buffers.append(buffer)
+            external_input_id += 1
+    else:
+        dnn_layers = dnn.get_layers()
+        if len(dnn_layers) > 0:
+            buffer_name = buffer_prefix + str(external_input_id)
+            buffer = generate_io_buffer_for_non_data_layer(dnn.get_layers()[0], buffer_name, buffer_subtype)
+            external_input_buffers.append(buffer)
+
+    return external_input_buffers
+
+
+def generate_external_output_buffers(dnn):
+    external_output_buffers = []
+    external_output_id = 0
+    buffer_subtype = "output_buffer"
+    buffer_prefix = "B_out"
+    if len(dnn.get_outputs()) > 0:
+        for external_output in dnn.get_outputs():
+            buffer_name = buffer_prefix + str(external_output_id)
+            buffer = generate_buffer_for_external_io(external_output.data_layer,
+                                                     external_output.dnn_layer.name,
+                                                     buffer_name,
+                                                     buffer_subtype)
+            external_output_buffers.append(buffer)
+            external_output_id += 1
+    else:
+        dnn_layers = dnn.get_layers()
+        if len(dnn_layers) > 0:
+            buffer_name = buffer_prefix + str(external_output_id)
+            buffer = generate_io_buffer_for_non_data_layer(dnn.get_layers()[-1], buffer_name, buffer_subtype)
+            external_output_buffers.append(buffer)
+
+    return external_output_buffers
+
+
+def generate_buffer_for_external_io(data_layer, dnn_layer_name, name, subtype):
+    buffer_size = data_layer.oh * data_layer.ow * data_layer.ofm
+    buffer = DataBuffer(name, buffer_size)
+    buffer.users.append(dnn_layer_name)
+    buffer.type = "single_buffer"
+    buffer.subtype = subtype
+    return buffer
+
+
+def generate_io_buffer_for_non_data_layer(dnn_layer, name, subtype):
+    if subtype == "input_buffer":
+        buffer_size = dnn_layer.ih * dnn_layer.iw * dnn_layer.ifm
+    else:
+        buffer_size = dnn_layer.oh * dnn_layer.ow * dnn_layer.ofm
+    buffer = DataBuffer(name, buffer_size)
+    buffer.users.append(dnn_layer.name)
+    buffer.type = "single_buffer"
+    buffer.subtype = subtype
+    return buffer
 

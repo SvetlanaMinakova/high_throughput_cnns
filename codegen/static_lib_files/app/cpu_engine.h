@@ -10,7 +10,6 @@
 #include <thread>
 #include <string>
 #include "types.h"
-#include "fifo.h"
 
 using namespace arm_compute::utils;
 using namespace arm_compute::graph::frontend;
@@ -18,14 +17,17 @@ using namespace arm_compute::graph_utils;
 
 class cpu_engine{
 public:
-//gpu_engine(gpu_partition* dnn_ptr, float* input, float *output, cudaStream_t* stream_ptr, std::string name);
- cpu_engine(int argc, char *argv[], float* input, float *output, Example *dnn_ptr, std::string name);
+ cpu_engine(int argc, char *argv[], Example *dnn_ptr, std::string name); // float* input, float *output parameters removed
  ~cpu_engine();
   void main(void *par);
 
   Example* dnn_ptr;
+  
+  /**
+  // I/O buffers moved into SharedBuffer objects
   float *input;
   float *output;
+  */
   std::string name; 
 
 };

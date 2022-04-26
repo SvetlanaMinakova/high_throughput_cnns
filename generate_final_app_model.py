@@ -19,6 +19,7 @@ def main():
     from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
     from models.dnn_model.dnn import set_built_in
     from models.dnn_model.transformation.ops_fusion import fuse_built_in
+    from models.dnn_model.transformation.external_ios_processor import data_layers_to_external_ios
     from converters.json_converters.json_to_architecture import json_to_architecture
     from converters.json_converters.json_task_graph import parse_task_graph_json
     from converters.json_converters.json_to_mapping import json_to_mapping
@@ -103,6 +104,11 @@ def main():
             print_stage(stage, verbose)
             set_built_in(dnn, fused_ops)
             fuse_built_in(dnn)
+
+        # optimize dnn: specify i/os explicitly
+        stage = "Optimize DNN: transform I/O data layers into external Inputs/Outputs"
+        print_stage(stage, verbose)
+        data_layers_to_external_ios(dnn)
 
         stage = "Reading task graph (SDF) model "
         print_stage(stage, verbose)

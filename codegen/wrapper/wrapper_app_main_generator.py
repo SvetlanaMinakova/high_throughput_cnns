@@ -1,6 +1,7 @@
 from codegen.codegen_visitor import CodegenVisitor
 from models.data_buffers import DataBuffer
 from codegen.wrapper.static_lib_info import get_static_lib_class_names
+from codegen.buffers_visitor import buf_type_to_buf_class
 
 
 def generate_app_main(directory,
@@ -149,18 +150,11 @@ class WrapperAppMainGenerator(CodegenVisitor):
             self.write_line(partition_class + " " + partition_name + ";")
         self.write_line("")
 
-    @staticmethod
-    def _buf_type_to_buf_class(buf_type: str):
-        if buf_type == "double_buffer":
-            return "DoubleBuffer"
-        else:
-            return "SingleBuffer"
-
     def _create_buffers(self):
         self.write_line("//////////////////////////////////////////////////////////////////////////////////////////////")
         self.write_line("// CREATE AND ALLOCATE BUFFERS (Areas of memory storing data exchanged between the subnets) //")
         for buffer in self.inter_partition_buffers:
-            buf_class = self._buf_type_to_buf_class(buffer.type)
+            buf_class = buf_type_to_buf_class(buffer.type)
             self.write_line(buf_class + " " + buffer.name + ";")
             self.write_line(buffer.name + ".init(" + "\"" + buffer.name + "\"" + ", " + str(buffer.size) + ");")
 

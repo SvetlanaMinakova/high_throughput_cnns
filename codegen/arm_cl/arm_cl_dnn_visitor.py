@@ -7,6 +7,7 @@ import codegen.makefile_generator
 import codegen.app_main_generator
 import codegen.codegen_config
 from codegen.arm_cl.dnn_to_streams import DNNSubStreamsGenerator
+from models.app_model.dnn_inf_model import generate_external_input_buffers, generate_external_output_buffers
 
 
 def visit_dnn(dnn: DNN, code_dir, verbose=True):
@@ -37,13 +38,19 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
     codegen.arm_cl.h.h_dnn_visitor.visit_dnn(dnn, code_dir, profile=True,
                                              sub_streams_generator=sub_streams_generator)
 
+    # generate I/O buffers
+    input_buffers = generate_external_input_buffers(dnn)
+    output_buffers = generate_external_output_buffers(dnn)
+    io_buffers = input_buffers + output_buffers
+
     # generate app main
     codegen.app_main_generator.generate_app_main(code_dir,
                                                  class_names_in_exec_order,
                                                  gpu_partition_class_names,
                                                  cpu_partition_class_names,
                                                  codegen_flags,
-                                                 cpu_cores_allocation)
+                                                 cpu_cores_allocation,
+                                                 io_buffers)
 
     # generate makefile
     codegen.makefile_generator.generate_makefile(code_dir,

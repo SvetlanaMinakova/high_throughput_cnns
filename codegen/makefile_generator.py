@@ -6,7 +6,11 @@ Make-file generator for tensorrt/arm-cl code
 """
 
 
-def generate_makefile(directory, gpu_partition_class_names: [], cpu_partition_class_names: [], arm_cl: bool, trt: bool):
+def generate_makefile(directory,
+                      gpu_partition_class_names: [],
+                      cpu_partition_class_names: [],
+                      arm_cl: bool,
+                      trt: bool):
     """
         generate tensorrt/arm-cl application makefile
         :param directory: directory to generate makefile in
@@ -35,11 +39,13 @@ class MakefileGenerator(CodegenVisitor):
         super().__init__(print_file, prefix="")
         self.gpu_partition_class_names = gpu_partition_class_names
         self.cpu_partition_class_names = cpu_partition_class_names
+        self.custom_buffers_class_names = ["SingleBuffer", "DoubleBuffer", "SharedBuffer", "types"] # "Subnet", "Timer",
         self.arm_cl = arm_cl
         self.trt = trt
         self.config = get_config()
         self.arm_cl_path = self.config["arm_cl_path"]
         self.cuda_path = self.config["cuda_path"]
+        self.cpp_standard = self.config["cpp_standard"]
 
     def visit(self):  
         try:
@@ -64,9 +70,16 @@ class MakefileGenerator(CodegenVisitor):
             self.write_per_object_classes()
 
             # custom code
+            for class_name in self.custom_buffers_class_names:
+                self.write_line(class_name + ".o: " + class_name + ".cpp")
+                self.write_line("\t${CXX} ${CXXFLAGS} -c -g $?")
+                self.write_line("")
+
+            """
             self.write_line("fifo.o: fifo.cpp")
             self.write_line("\t${CXX} ${CXXFLAGS} -c -g $?")
             self.write_line("")
+            """
 
             self.write_line("appMain.o: appMain.cpp")
             self.write("\t${CXX} appMain.cpp")
@@ -85,7 +98,7 @@ class MakefileGenerator(CodegenVisitor):
     def write_lib_paths_and_flags(self):
         self.write_line("CXX=aarch64-linux-gnu-g++")
         self.write_line("")
-        self.write_line("CXXFLAGS= -std=c++11 -Wl,--allow-shlib-undefined")
+        self.write_line("CXXFLAGS= -std=c++" + str(self.cpp_standard) + " -Wl,--allow-shlib-undefined")
         self.write_line("")
 
         if self.arm_cl:
@@ -93,8 +106,8 @@ class MakefileGenerator(CodegenVisitor):
             self.write_line("")
             self.write_line("ARM_INCFLAG = -I${ARM_PATH} -I${ARM_PATH}/include")
             self.write_line("")
-            self.write_line(
-                "ARM_SOURCES = ${ARM_PATH}/utils/Utils.cpp ${ARM_PATH}/utils/GraphUtils.cpp ${ARM_PATH}/utils/CommonGraphOptions.cpp")
+            self.write_line("ARM_SOURCES = ${ARM_PATH}/utils/Utils.cpp "
+                            "${ARM_PATH}/utils/GraphUtils.cpp ${ARM_PATH}/utils/CommonGraphOptions.cpp")
             self.write_line("CXXLIB = -L${ARM_PATH} -larm_compute_graph -larm_compute -larm_compute_core -lpthread")
             self.write_line("")
 
@@ -103,7 +116,7 @@ class MakefileGenerator(CodegenVisitor):
             self.write_line("")
 
         if self.trt:
-            self.write_line("CUDA_FLAGS= -Wall -std=c++11 -O2")
+            self.write_line("CUDA_FLAGS= -Wall -std=c++" + str(self.cpp_standard) + " -O2")
             self.write_line("")
             self.write_line("CUDA_PATH=" + self.cuda_path + "")
             self.write_line("")
@@ -113,9 +126,11 @@ class MakefileGenerator(CodegenVisitor):
                 " -I\"" + self.cuda_path + "/include\" -I\"../../include\"  -D_REENTRANT")
             self.write_line("")
             self.write_line(
-                "CUDA_LIB = -L\"\" -L\"" + self.cuda_path + "/targets/x86_64-linux/lib64\" -L\"/usr/local/lib\" -L\"../lib\"" +
+                "CUDA_LIB = -L\"\" -L\"" + self.cuda_path +
+                "/targets/x86_64-linux/lib64\" -L\"/usr/local/lib\" -L\"../lib\"" +
                 " -L\"" + self.cuda_path + "/lib64\" -L\"" + self.cuda_path + "/lib64\" -L\"../../lib\"" +
-                "   -L./ -Wl,--start-group -lnvinfer -lnvparsers -lnvinfer_plugin -lcudnn -lcublas -lcudart_static -lnvToolsExt -lcudart -lrt -ldl -lpthread -Wl,--end-group")
+                "   -L./ -Wl,--start-group -lnvinfer -lnvparsers -lnvinfer_plugin -lcudnn -lcublas "
+                "-lcudart_static -lnvToolsExt -lcudart -lrt -ldl -lpthread -Wl,--end-group")
             self.write_line("")
 
     def write_objects(self):
@@ -140,7 +155,11 @@ class MakefileGenerator(CodegenVisitor):
                 self.write(class_name + ".o ")
             self.write("gpu_partition.o ")
 
-        self.write("fifo.o appMain.o")
+        # custom buffers
+        for class_name in self.custom_buffers_class_names:
+            self.write(class_name + ".o ")
+
+        self.write("appMain.o")#"fifo.o appMain.o"
 
     def build_app_main_compiler_dependencies(self):
         app_main_compiler_dependencies = ""
@@ -174,7 +193,7 @@ class MakefileGenerator(CodegenVisitor):
 
             for class_name in self.cpu_partition_class_names:
                 self.write_line(class_name + ".o: ")
-                self.write_line("\t${CXX} " + class_name + ".cpp $(ARM_INCFLAG) ${CXXLIB} ${CXXFLAGS} -c -g $?");
+                self.write_line("\t${CXX} " + class_name + ".cpp $(ARM_INCFLAG) ${CXXLIB} ${CXXFLAGS} -c -g $?")
                 self.write_line("")
 
         # GPU

@@ -4,7 +4,6 @@
 #include <vector>
 #include <thread>
 #include "types.h"
-#include "fifo.h"
 #include <string>
 #include "gpu_engine.h"
 
@@ -96,10 +95,8 @@ void printLayerNames(){
 } gProfiler;
 
 /** CONSTRUCTOR**/
-gpu_engine::gpu_engine(gpu_partition* dnn_ptr, float* input, float *output, cudaStream_t* stream_ptr, std::string name){
+gpu_engine::gpu_engine(gpu_partition* dnn_ptr, cudaStream_t* stream_ptr, std::string name){
    this->dnn_ptr = dnn_ptr;
-   this->input = input;
-   this->output = output;
    this->cuda_stream_ptr = stream_ptr;
    this->name = name;
 
@@ -110,6 +107,7 @@ gpu_engine::gpu_engine(gpu_partition* dnn_ptr, float* input, float *output, cuda
         setup_err=true;
    }
 
+/**
    if(input==nullptr){
         std::cerr << std::endl<< "GPU ENGINE "<<this->name<<" SETUP ERROR: DNN INPUT BUFFER PTR IS NULL" << std::endl;
         setup_err=true;
@@ -119,6 +117,7 @@ gpu_engine::gpu_engine(gpu_partition* dnn_ptr, float* input, float *output, cuda
         std::cerr << std::endl<< "GPU ENGINE "<<this->name<<" SETUP ERROR: OUTPUT BUFFER PTR IS NULL" << std::endl;
         setup_err=true;
    }
+*/
    
    if(!setup_err)  
         std::cout<<"GPU ENGINE "<<this->name<<" CREATED!"<<std::endl;
@@ -133,47 +132,28 @@ gpu_engine::~gpu_engine(){
 /** INFERENCE HERE **/
 void gpu_engine::main(void *vpar) {
   try{   
-        thread_info* par = (struct thread_info *) vpar;
+        ThreadInfo* par = (struct ThreadInfo*) vpar;
         setaffinity(par->core_id);
-
-        fifo_buf* in_buf_ptr  = par->get_fifo_buf_by_dst(this->name);
-        fifo_buf* out_buf_ptr = par->get_fifo_buf_by_src(this->name);
 
         /**set profiler, if required*/
         if (this->dnn_ptr->detailed_profile)
         	this->dnn_ptr->context->setProfiler(&gProfiler);
-
-        //in case Multi I/Os needed
-        //std::vector<fifo_buf*> get_in_fifos(this->name);
-        //std::vector<fifo_buf*> get_out_fifos(this->name);
-
-        //max tokens port IP0
-        int IP0_tokens = 0;
-        int OP0_tokens = 0;
-
-        /**if(in_buf_ptr == nullptr) std::cout<<this->name<<" has null input buffer."<<std::endl;
-        else IP0_tokens = in_buf_ptr->in_rate;
-
-        if(out_buf_ptr == nullptr) std::cout<<this->name<<" has null output buffer."<<std::endl;
-        else OP0_tokens = out_buf_ptr->out_rate;*/
-
-  	//auto startTime = std::chrono::high_resolution_clock::now();
         
         for (int i=0; i<frames;i++){
-          //read
-           if (IP0_tokens > 0)
-               readSWF_CPU(in_buf_ptr->fifo, &input[0], IP0_tokens, in_buf_ptr->fifo_size);
-
-           this->dnn_ptr->doRead(this->input, this->cuda_stream_ptr);
+	   
+	   // read 
+           //this->dnn_ptr->doRead(this->input, this->cuda_stream_ptr);
           // std::cout<<"GPU ENGINE "<<this->name<<" reads "<<this->dnn_ptr->batchSize * this->dnn_ptr->INPUT_H * this->dnn_ptr->INPUT_W * this->dnn_ptr->INPUT_C<<" from input buffer "<<std::endl;
+      	   // execute
       	   this->dnn_ptr->doInference(this->cuda_stream_ptr);
+           
+           //write
+           /**
            this->dnn_ptr->doWrite(this->output, this->cuda_stream_ptr);
+*/
           // std::cout<<"GPU ENGINE "<<this->name<<" writes "<<this->dnn_ptr->OUTPUT_SIZE<<" to output buffer "<<std::endl;
            this->dnn_ptr->doSync(this->cuda_stream_ptr);
           //std::cout<<"GPU ENGINE "<<this->name<<" executed! "<<std::endl;
-          //write
-           if ( OP0_tokens > 0 )
-            writeSWF_CPU(out_buf_ptr->fifo, &output[0], OP0_tokens, out_buf_ptr->fifo_size);
 
         }
 
@@ -182,9 +162,6 @@ void gpu_engine::main(void *vpar) {
         	gProfiler.printLayerTimes();
         	gProfiler.generateEvalJSON ((this->name + ".json"));
         }
-  	//auto endTime = std::chrono::high_resolution_clock::now();
-  	//float totalTime = std::chrono::duration<float, std::milli>(endTime - startTime).count();
-  	//std::cout<<this->name <<" (GPU + cpu core "<<par->core_id<<"): average over "<<frames<< " images = ~ "<<(totalTime/float(frames))<<" ms/img "<<std::endl;
  }
 
   catch(std::runtime_error &err){

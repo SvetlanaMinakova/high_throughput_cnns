@@ -12,6 +12,8 @@
 #include <memory>
 #include <map>
 
+#define frames 50
+
 struct ThreadInfo{
     char *message;
     pthread_t thread_id; // ID returned by pthread_create()

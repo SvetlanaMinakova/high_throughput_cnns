@@ -9,9 +9,11 @@ def get_config():
     # NOTE: Change this to specify paths to CUDA/ARM-CL libraries on your board
     cuda_path = "/usr/local/cuda-9.0"
     arm_cl_path = "/home/nvidia/arm_cl/ComputeLibrary"
+    cpp_standard = 14
 
     conf = {"cuda_path": cuda_path,
-            "arm_cl_path": arm_cl_path}
+            "arm_cl_path": arm_cl_path,
+            "cpp_standard": cpp_standard}
     return conf
 
 

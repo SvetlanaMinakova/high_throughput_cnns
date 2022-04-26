@@ -6,7 +6,7 @@ import codegen.tensorrt.h.h_dnn_visitor
 import codegen.makefile_generator
 import codegen.app_main_generator
 import codegen.codegen_config
-
+from models.app_model.dnn_inf_model import generate_external_input_buffers, generate_external_output_buffers
 
 def visit_dnn(dnn: DNN, code_dir, verbose=True):
     """
@@ -29,13 +29,19 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
     codegen.tensorrt.cpp.cpp_dnn_visitor.visit_dnn(dnn, code_dir, gpu_profile=True)
     codegen.tensorrt.h.h_dnn_visitor.visit_dnn(dnn, code_dir, gpu_profile=True)
 
+    # generate I/O buffers
+    input_buffers = generate_external_input_buffers(dnn)
+    output_buffers = generate_external_output_buffers(dnn)
+    io_buffers = input_buffers + output_buffers
+
     # generate app main
     codegen.app_main_generator.generate_app_main(code_dir,
                                                  class_names_in_exec_order,
                                                  gpu_partition_class_names,
                                                  cpu_partition_class_names,
                                                  codegen_flags,
-                                                 cpu_cores_allocation)
+                                                 cpu_cores_allocation,
+                                                 io_buffers)
 
     codegen.makefile_generator.generate_makefile(code_dir,
                                                  gpu_partition_class_names,

@@ -1,5 +1,6 @@
 from codegen.codegen_visitor import CodegenVisitor
 from codegen.codegen_config import CodegenFlag
+from codegen.buffers_visitor import buf_type_to_buf_class
 
 
 def generate_app_main(directory,
@@ -7,7 +8,8 @@ def generate_app_main(directory,
                       gpu_partition_class_names: [],
                       cpu_partition_class_names: [],
                       flags: [CodegenFlag],
-                      cpu_core_per_class_name: {}):
+                      cpu_core_per_class_name: {},
+                      inter_partition_buffers=None):
     """
         generate main application file
         :param directory: directory to generate main application file in
@@ -17,11 +19,18 @@ def generate_app_main(directory,
         :param cpu_core_per_class_name: (dictionary) key (string)=class_name, value(int) = cpu_core_id
          allocation of CPU cores for every partition
         :param flags: code-generation flags (see  codegen_config.CodegenFlags)
+                :param inter_partition_buffers: (optional) list of buffers, used to store data
+            exchanged between DNN partitions
     """
     filepath = directory + "/" + "appMain.cpp"
     with open(filepath, "w") as print_file:
-        visitor = AppMainGenerator(print_file, class_names_in_exec_order, gpu_partition_class_names,
-                                   cpu_partition_class_names, flags, cpu_core_per_class_name)
+        visitor = AppMainGenerator(print_file,
+                                   class_names_in_exec_order,
+                                   gpu_partition_class_names,
+                                   cpu_partition_class_names,
+                                   flags,
+                                   cpu_core_per_class_name,
+                                   inter_partition_buffers)
         visitor.visit()
 
 
@@ -103,6 +112,7 @@ class AppMainGenerator(CodegenVisitor):
         std_lib_headers = ["iostream", "map", "vector", "thread", "chrono"]
         gpu_lib_headers = ["cuda_runtime_api", "gpu_partition", "gpu_engine"]
         cpu_lib_headers = ["arm_compute/graph", "cpu_engine"]
+        custom_buffer_headers = ["types", "SingleBuffer", "DoubleBuffer"] # "SharedBuffer"
 
         local_lib_headers = []
         if self.trt > 0:
@@ -117,6 +127,10 @@ class AppMainGenerator(CodegenVisitor):
 
         for lib_header in local_lib_headers:
             self._include_local_cpp_header(lib_header)
+
+        if self.inter_partition_buffers is not None:
+            for lib_header in custom_buffer_headers:
+                self._include_local_cpp_header(lib_header)
 
     def _write_main(self):
         self.write_line("int main (int argc, char **argv) {")
@@ -171,18 +185,10 @@ class AppMainGenerator(CodegenVisitor):
     ####################################
     # explicitly specified local buffers
     def _create_specified_local_buffers(self):
-        self.write_line("//GPU")
-        for name in self.gpu_partition_names:
-            self._create_naive_local_in_buffer(name)
-            self._create_naive_local_out_buffer(name)
-
-        self.write_line("")
-        self.write_line("//CPU")
-
-        for name in self.cpu_partition_names:
-            self._create_naive_local_in_buffer(name)
-            self._create_naive_local_out_buffer(name)
-
+        for buffer in self.inter_partition_buffers:
+            buf_class = buf_type_to_buf_class(buffer.type)
+            self.write_line(buf_class + " " + buffer.name + ";")
+            self.write_line(buffer.name + ".init(" + "\"" + buffer.name + "\"" + ", " + str(buffer.size) + ");")
         self.write_line("")
 
     ####################################
@@ -217,7 +223,7 @@ class AppMainGenerator(CodegenVisitor):
     def _create_reuse_local_buffers(self):
         # define reused buffers
         self.write_line("//Reused CPU/GPU buffers")
-        for buffer in self.dnn_buffers:
+        for buffer in self.inter_partition_buffers:
             self._create_reused_local_buffer(buffer)
         print("")
 
@@ -256,18 +262,27 @@ class AppMainGenerator(CodegenVisitor):
             engine_name = self.gpu_engine_names[pid]
             self.write_line("cudaStream_t " + partition_name + "_stream; ")
             self.write_line("CHECK(cudaStreamCreate(&" + partition_name + "_stream));")
+            # I/O s moved to SharedBuffers
+            self.write_line("gpu_engine " + self.gpu_engine_names[pid] + " (&" + partition_name +
+                            ", &" + partition_name + "_stream, \"" + engine_name + "\");")
+            """
             self.write_line("gpu_engine " + self.gpu_engine_names[pid] + " (&" + partition_name + ", " +
                             partition_name + "_input, " + partition_name + "_output, &" + 
                             partition_name + "_stream, \"" + engine_name + "\");")
+            """
         self.write_line("")
         self.write_line("//CPU")
         for pid in range(len(self.cpu_engine_names)):
             engine_name = self.cpu_engine_names[pid]
             partition_name = self.cpu_partition_names[pid]
-            # cpu_engine, e.g., e1(argc, argv, input2, output2, & p1, "engine2");
+            # I/O s moved to SharedBuffers
+            self.write_line("cpu_engine " + engine_name + " (argc, argv, &" +
+                            partition_name + ", \"" + engine_name + "\");")
+            """
             self.write_line("cpu_engine " + engine_name + " (argc, argv, " +
                             partition_name + "_input, " + partition_name + "_output, &" +
                             partition_name + ", \"" + engine_name + "\");")
+            """
 
         # if (_cpuDebugMode)
         if len(self.cpu_partition_names) > 0:
@@ -287,7 +302,7 @@ class AppMainGenerator(CodegenVisitor):
             
     def _create_pthread_parameters(self):
         self.write_line("/////////////////////////////////////////////////////////////")
-        self.write_line("//  PTHREAD thread_infoparams //")
+        self.write_line("//  PTHREAD PARAMETERS //")
         self.write_line("std::cout<<\" - Pthread info-params creation.\"<<std::endl;")
         self.write_line("")
         self.write_line("int subnets = " + str(len(self.class_names_in_exec_order)) + ";")
@@ -305,8 +320,8 @@ class AppMainGenerator(CodegenVisitor):
 
         self.write_line("//Allocate memory for pthread_create() arguments")
         self.write_line("const int num_threads = subnets;")
-        self.write_line("struct thread_info *thread_info = "
-                        "(struct thread_info*)(calloc(num_threads, sizeof(struct thread_info)));")
+        self.write_line("struct ThreadInfo* thread_info = "
+                        "(struct ThreadInfo*)(calloc(num_threads, sizeof(struct ThreadInfo)));")
         self.write_line("")
 
         self.write_line("//  allocate CPU cores")
