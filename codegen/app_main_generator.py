@@ -9,6 +9,7 @@ def generate_app_main(directory,
                       cpu_partition_class_names: [],
                       flags: [CodegenFlag],
                       cpu_core_per_class_name: {},
+                      inter_partition_connections: [],
                       inter_partition_buffers=None):
     """
         generate main application file
@@ -19,7 +20,8 @@ def generate_app_main(directory,
         :param cpu_core_per_class_name: (dictionary) key (string)=class_name, value(int) = cpu_core_id
          allocation of CPU cores for every partition
         :param flags: code-generation flags (see  codegen_config.CodegenFlags)
-                :param inter_partition_buffers: (optional) list of buffers, used to store data
+        :param inter_partition_connections: list of connections between dnn partitions
+        :param inter_partition_buffers: (optional) list of buffers, used to store data
             exchanged between DNN partitions
     """
     filepath = directory + "/" + "appMain.cpp"
@@ -30,6 +32,7 @@ def generate_app_main(directory,
                                    cpu_partition_class_names,
                                    flags,
                                    cpu_core_per_class_name,
+                                   inter_partition_connections,
                                    inter_partition_buffers)
         visitor.visit()
 
@@ -45,6 +48,7 @@ class AppMainGenerator(CodegenVisitor):
                  cpu_partition_class_names: [],
                  flags: [CodegenFlag],
                  cpu_core_per_class_name: {},
+                 inter_partition_connections: [],
                  inter_partition_buffers=None):
         """
         Create new application main-file generator
@@ -54,6 +58,7 @@ class AppMainGenerator(CodegenVisitor):
         :param flags: code-generation flags (see  codegen_config.CodegenFlags)
         :param cpu_core_per_class_name: (dictionary) key (string)=class_name, value(int) = cpu_core_id
          allocation of CPU cores for every partition
+        :param inter_partition_connections: list of connections between dnn partitions
         :param inter_partition_buffers: (optional) list of buffers, used to store data
             exchanged between DNN partitions
         """
@@ -66,6 +71,7 @@ class AppMainGenerator(CodegenVisitor):
         self.flags = flags
         self.cpu_core_per_class_name = cpu_core_per_class_name
         self.default_cpu_core = 1
+        self.inter_partition_connections = inter_partition_connections
         self.inter_partition_buffers = inter_partition_buffers
 
         # meta-data
@@ -174,8 +180,8 @@ class AppMainGenerator(CodegenVisitor):
     # BUFFERS
         
     def _create_local_buffers(self):
-        self.write_line("/////////////////////////////////////////////////////////////")
-        self.write_line("// CREATE DNN/DNN PARTITIONS I/O BUFFERS //")
+        self.write_line("////////////////////////////////////////////////")
+        self.write_line("// CREATE I/O BUFFERS FOR DNN/DNN PARTITIONS //")
         self.write_line("std::cout<<\" - I/O buffers allocation.\"<<std::endl;")
         if self.inter_partition_buffers is None:
             self._create_naive_local_buffers()
@@ -185,11 +191,29 @@ class AppMainGenerator(CodegenVisitor):
     ####################################
     # explicitly specified local buffers
     def _create_specified_local_buffers(self):
+        self.write_line("// create and init buffers")
         for buffer in self.inter_partition_buffers:
             buf_class = buf_type_to_buf_class(buffer.type)
             self.write_line(buf_class + " " + buffer.name + ";")
             self.write_line(buffer.name + ".init(" + "\"" + buffer.name + "\"" + ", " + str(buffer.size) + ");")
         self.write_line("")
+
+    def _allocate_specified_local_buffers(self):
+        self.write_line("// allocate buffers to cpu/gpu engines")
+        for buffer in self.inter_partition_buffers:
+            sources = self.get_buf_src_partition_names(buffer)
+
+        self.write_line("")
+
+    def get_buf_src_partition_names(self, buffer):
+        if buffer.type == "input_buffer":
+            return buffer.users
+        if buffer.type == "output_buffer":
+            return []
+        # i/o buffer
+        # extract i/o buffer sources from connection
+        for connection in self.inter_partition_connections:
+            pass
 
     ####################################
     # naive local buffers

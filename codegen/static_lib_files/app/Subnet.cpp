@@ -110,7 +110,6 @@ Subnet::updatesLock Subnet::lockBufferForWriting(DoubleBuffer *bufPtr) {
 
 
 void Subnet::main(void *thread_par) {
-    // std::cout<<"Subnet main entered!"<<std::endl;
     auto* par = (struct ThreadInfo*) thread_par;
     setaffinity(par->core_id);
     for (int run=0; run<runs; run++){

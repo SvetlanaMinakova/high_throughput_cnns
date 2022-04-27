@@ -94,34 +94,6 @@ void printLayerNames(){
 
 } gProfiler;
 
-/** CONSTRUCTOR**/
-gpu_engine::gpu_engine(gpu_partition* dnn_ptr, cudaStream_t* stream_ptr, std::string name){
-   this->dnn_ptr = dnn_ptr;
-   this->cuda_stream_ptr = stream_ptr;
-   this->name = name;
-
-   bool setup_err = false;
-
-   if(dnn_ptr==nullptr){
-        std::cerr << std::endl<< "GPU ENGINE "<<this->name<<" SETUP ERROR: DNN PARTITION PTR IS NULL" << std::endl;
-        setup_err=true;
-   }
-
-/**
-   if(input==nullptr){
-        std::cerr << std::endl<< "GPU ENGINE "<<this->name<<" SETUP ERROR: DNN INPUT BUFFER PTR IS NULL" << std::endl;
-        setup_err=true;
-   }
-
-   if(output==nullptr){
-        std::cerr << std::endl<< "GPU ENGINE "<<this->name<<" SETUP ERROR: OUTPUT BUFFER PTR IS NULL" << std::endl;
-        setup_err=true;
-   }
-*/
-   
-   if(!setup_err)  
-        std::cout<<"GPU ENGINE "<<this->name<<" CREATED!"<<std::endl;
-}
 
 /** DESTRUCTOR **/
 gpu_engine::~gpu_engine(){
@@ -130,42 +102,86 @@ gpu_engine::~gpu_engine(){
 
 
 /** INFERENCE HERE **/
-void gpu_engine::main(void *vpar) {
-  try{   
-        ThreadInfo* par = (struct ThreadInfo*) vpar;
+void gpu_engine::main(void *thread_par) {
+    try{
+        // assign CPU core to current thread
+        auto* par = (struct ThreadInfo*) thread_par;
         setaffinity(par->core_id);
 
-        /**set profiler, if required*/
+        // set TensorRT execution time profiler, if required
         if (this->dnn_ptr->detailed_profile)
         	this->dnn_ptr->context->setProfiler(&gProfiler);
         
         for (int i=0; i<frames;i++){
+            // wait until input data is ready for reading
+            // and output (data) buffers are available for writing
+            while (!(inputDataAvailable() && outputDataAvailable()));
+
+            // Lock buffers
+            // To support data copy overlapping with the CNN execution,
+            // the I/O buffers are locked the whole duration of the Subnet node execution
+            // Each buffer lock is created as a scope-lock. Using a mutex (defined within a
+            // buffer) such a lock locks the buffer on the lock creation and releases the
+            // buffer on lock destruction. Note, that the locks are created in a loop
+            // that traverses all input or all output buffers. To avoid the locks destruction
+            // upon the loop end (we want the locks to be destroyed after the buffers
+            // released only in the end of the run iteration), the locks are put in vectors.
+
+            // std::cout<<"Before buffers locked..."<<std::endl;
+
+            // lock input buffers for reading
+            std::vector<readingLock> readingLocks;
+            for (auto bufPtr: inputBufferPtrs){
+                readingLock lock = bufPtr->lockForReading();
+                readingLocks.push_back(std::move(lock));
+            }
+
+            // lock output buffers for writing
+            std::vector<updatesLock> updateLocks;
+            for (auto bufPtr: outputBufferPtrs){
+                updatesLock lock = bufPtr->lockForWriting();
+                updateLocks.push_back(std::move(lock));
+            }
+	
+	     ///////////////////
+            // perform reading
+            for (auto bufPtr: inputBufferPtrs){
+                bufPtr->read();
+                bufPtr->syncAfterReading();
+            }
 	   
-	   // read 
-           //this->dnn_ptr->doRead(this->input, this->cuda_stream_ptr);
-          // std::cout<<"GPU ENGINE "<<this->name<<" reads "<<this->dnn_ptr->batchSize * this->dnn_ptr->INPUT_H * this->dnn_ptr->INPUT_W * this->dnn_ptr->INPUT_C<<" from input buffer "<<std::endl;
-      	   // execute
-      	   this->dnn_ptr->doInference(this->cuda_stream_ptr);
-           
-           //write
-           /**
-           this->dnn_ptr->doWrite(this->output, this->cuda_stream_ptr);
-*/
-          // std::cout<<"GPU ENGINE "<<this->name<<" writes "<<this->dnn_ptr->OUTPUT_SIZE<<" to output buffer "<<std::endl;
+            //this->dnn_ptr->doRead(this->input, this->cuda_stream_ptr);
+            // std::cout<<"GPU ENGINE "<<this->name<<" reads "<<this->dnn_ptr->batchSize * this->dnn_ptr->INPUT_H * this->dnn_ptr->INPUT_W * this->dnn_ptr->INPUT_C<<" from input buffer "<<std::endl;
+        
+            ///////////////////
+      	    // execute dnn Inference
+      	    this->dnn_ptr->doInference(this->cuda_stream_ptr);
+       
+           // std::cout<<"GPU ENGINE "<<this->name<<" writes "<<this->dnn_ptr->OUTPUT_SIZE<<" to output buffer "<<std::endl;
            this->dnn_ptr->doSync(this->cuda_stream_ptr);
-          //std::cout<<"GPU ENGINE "<<this->name<<" executed! "<<std::endl;
+           //std::cout<<"GPU ENGINE "<<this->name<<" executed! "<<std::endl;
+           
+           //////////////////
+      	   // perform writing
+            for (auto bufPtr: outputBufferPtrs){
+                bufPtr->write();
+                bufPtr->syncAfterWriting();
+            }
 
+            // this->dnn_ptr->doWrite(this->output, this->cuda_stream_ptr);
+            // Buffer locks will be automatically released here after
+            // readingLocks and  updateLocks vectors reach the scope end and are cleared
         }
 
-	/** print layers time profile information to console and to file*/ 
+        /** print layers time profile information to console and to file*/ 
         if (this->dnn_ptr->detailed_profile) {
-        	gProfiler.printLayerTimes();
-        	gProfiler.generateEvalJSON ((this->name + ".json"));
+        gProfiler.printLayerTimes();
+        gProfiler.generateEvalJSON ((this->name + ".json"));
         }
- }
+    }
 
-  catch(std::runtime_error &err){
-   std::cerr << std::endl<< "GPU ENGINE ERROR " << err.what() << " " << (errno ? strerror(errno) : "") << std::endl;
-   return;
- }
+    catch(std::runtime_error &err){
+        std::cerr << std::endl<< "GPU ENGINE ERROR " << err.what() << " " << (errno ? strerror(errno) : "") << std::endl;
+        return;
+    }
 }

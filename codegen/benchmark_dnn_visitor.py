@@ -37,7 +37,10 @@ def visit_dnn(dnn: DNN, code_dir, built_in, verbose=True):
         partitioned_dnn, connections = partition_dnn_with_task_graph(dnn, tg)
 
         stage = "CPU (partitioned) code generation"
-        codegen.arm_cl.arm_cl_dnn_visitor.visit_dnn_partitioned(partitioned_dnn, code_folder_cpu_partitioned, verbose)
+        codegen.arm_cl.arm_cl_dnn_visitor.visit_dnn_partitioned(partitioned_dnn,
+                                                                connections,
+                                                                code_folder_cpu_partitioned,
+                                                                verbose)
 
     except Exception as err:
         sys.stderr.write("Benchmark CPU/GPU code generation error. DNN: " + dnn.name +

@@ -7,6 +7,8 @@ import codegen.makefile_generator
 import codegen.app_main_generator
 import codegen.codegen_config
 from models.app_model.dnn_inf_model import generate_external_input_buffers, generate_external_output_buffers
+from models.app_model.InterDNNConnection import InterDNNConnection
+
 
 def visit_dnn(dnn: DNN, code_dir, verbose=True):
     """
@@ -34,6 +36,9 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
     output_buffers = generate_external_output_buffers(dnn)
     io_buffers = input_buffers + output_buffers
 
+    # there is only one partition, and thus no connections between partitions
+    inter_partition_connections = []
+
     # generate app main
     codegen.app_main_generator.generate_app_main(code_dir,
                                                  class_names_in_exec_order,
@@ -41,6 +46,7 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
                                                  cpu_partition_class_names,
                                                  codegen_flags,
                                                  cpu_cores_allocation,
+                                                 inter_partition_connections,
                                                  io_buffers)
 
     codegen.makefile_generator.generate_makefile(code_dir,
@@ -53,10 +59,14 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
         print("TensorRT code is generated in", code_dir)
 
 
-def visit_dnn_partitioned(dnn_partitions: [DNN], code_dir, verbose=True):
+def visit_dnn_partitioned(dnn_partitions: [DNN],
+                          inter_partition_connections: [InterDNNConnection],
+                          code_dir,
+                          verbose=True):
     """
     Generate TensorRT code for a DNN
     :param dnn_partitions: list of (partitioned) DNNs
+    :param inter_partition_connections: list of connections between DNN partitions
     :param code_dir: folder to generate code in
     NOTE: folder will be overwritten!
     :param verbose: print details
@@ -81,7 +91,8 @@ def visit_dnn_partitioned(dnn_partitions: [DNN], code_dir, verbose=True):
                                                  gpu_partition_class_names,
                                                  cpu_partition_class_names,
                                                  codegen_flags,
-                                                 cpu_cores_allocation)
+                                                 cpu_cores_allocation,
+                                                 inter_partition_connections)
     # generate makefile
     codegen.makefile_generator.generate_makefile(code_dir,
                                                  gpu_partition_class_names,

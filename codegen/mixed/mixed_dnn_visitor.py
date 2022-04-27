@@ -76,7 +76,8 @@ def visit_dnn_app(dnn: DNN,
                                                  gpu_partition_class_names,
                                                  cpu_partition_class_names,
                                                  codegen_flags,
-                                                 cpu_cores_allocation)
+                                                 cpu_cores_allocation,
+                                                 connections)
     # generate makefile
     codegen.makefile_generator.generate_makefile(code_dir,
                                                  gpu_partition_class_names,

@@ -26,6 +26,18 @@
       "dst": "Subnet2"
     }],
   "inter_partition_buffers": [    {
+      "name": "B_in0",
+      "size": 784,
+      "users": ["Subnet1"],
+      "type": "single_buffer",
+      "subtype": "input_buffer"
+    },    {
+      "name": "B_out0",
+      "size": 10,
+      "users": ["Subnet2"],
+      "type": "single_buffer",
+      "subtype": "output_buffer"
+    },    {
       "name": "B0",
       "size": 1568,
       "users": ["external_Pooling66_Convolution110"],

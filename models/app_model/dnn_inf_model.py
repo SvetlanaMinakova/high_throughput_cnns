@@ -75,48 +75,32 @@ def generate_dnn_inference_model(dnn: DNN,
             connections_desc.append(json_connection)
         return connections_desc
 
-    def _generate_inter_partition_buffers():
+    def _generate_inter_partition_buffers(start_buf_id=0):
+        """
+        Generate buffers between partitions
+        :param start_buf_id:
+        :return:
+        """
         inter_partition_buf = []
-        if schedule_type == DNNScheduling.PIPELINE:
-            _generate_inter_partition_buffers_pipeline(inter_partition_buf)
-        else:
-            _generate_inter_partition_buffers_sequential(inter_partition_buf)
-        return inter_partition_buf
-
-    def _generate_inter_partition_buffers_pipeline(inter_partition_buf, start_buf_id=0):
-        """
-        Generate buffers for pipelined application
-        in case of pipeline schedule, every connection is associated with two buffers:
-        an input buffer for data-consuming partition and an output buffer for data-producing partition
-        """
         buf_id = start_buf_id
+
         for connection in sorted_connections:
-            # double-buffer
             buffer_name = "B" + str(buf_id)
             buffer_size = connection.data_w * connection.data_h * connection.data_ch
             buffer = DataBuffer(buffer_name, buffer_size)
             buffer.users.append(connection.name)
-            buffer.type = "double_buffer"
+            # buffer type
+            # in case of sequential schedule, buffer is a single-buffer (a simple area of memory)
+            # which, at every moment in time can be used either for reading or for writing
+            # in case of pipeline schedule, every connection is associated with a double-buffer:
+            # a special composition of two single buffers,
+            # which enables for overlapping reading and writing
+            buffer.type = "double_buffer" if schedule_type == DNNScheduling.PIPELINE else "single_buffer"
+            buffer.subtype = "io_buffer"
             inter_partition_buf.append(buffer)
             buf_id += 1
 
-    def _generate_inter_partition_buffers_sequential(inter_partition_buf, start_buf_id=0):
-        """
-        Generate buffers for sequential application
-        in case of sequential schedule, every connection is associated with a
-        single buffer, which serves as an input to data-consuming partition and as an
-        output buffer for data-producing partition
-        """
-        buf_id = start_buf_id
-        for connection in partitioner.get_inter_partition_connections():
-            # single-buffer
-            buffer_name = "B" + str(buf_id)
-            buffer_size = connection.data_w * connection.data_h * connection.data_ch
-            buffer = DataBuffer(buffer_name, buffer_size)
-            buffer.users.append(connection.name)
-            buffer.type = "single_buffer"
-            inter_partition_buf.append(buffer)
-            buf_id += 1
+        return inter_partition_buf
 
     def get_layer_id_in_dnn(layer_name):
         layer = dnn.find_layer_by_name(layer_name)
@@ -189,10 +173,10 @@ def generate_dnn_inference_model(dnn: DNN,
     # generate application buffers
     app_buffers = []
     # DNN input buffers
-    input_buffers = generate_external_input_buffers(dnn)
+    input_buffers = generate_external_input_buffers(dnn, sorted_partitions)
     app_buffers = app_buffers + input_buffers
     # DNN output buffers
-    output_buffers = generate_external_output_buffers(dnn)
+    output_buffers = generate_external_output_buffers(dnn, sorted_partitions)
     app_buffers = app_buffers + output_buffers
     # buffers among DNN partitions
     inter_partition_buffers = _generate_inter_partition_buffers()
@@ -205,7 +189,7 @@ def generate_dnn_inference_model(dnn: DNN,
     return dnn_inference_model
 
 
-def generate_external_input_buffers(dnn):
+def generate_external_input_buffers(dnn, partitions=None):
     external_input_buffers = []
     external_input_id = 0
     buffer_subtype = "input_buffer"
@@ -213,23 +197,26 @@ def generate_external_input_buffers(dnn):
     if len(dnn.get_inputs()) > 0:
         for external_input in dnn.get_inputs():
             buffer_name = buffer_prefix + str(external_input_id)
+            user_partition = find_partition_for_layer(dnn, external_input.dnn_layer.name, partitions)
             buffer = generate_buffer_for_external_io(external_input.data_layer,
-                                                     external_input.dnn_layer.name,
                                                      buffer_name,
-                                                     buffer_subtype)
+                                                     buffer_subtype,
+                                                     user_partition)
             external_input_buffers.append(buffer)
             external_input_id += 1
     else:
         dnn_layers = dnn.get_layers()
         if len(dnn_layers) > 0:
             buffer_name = buffer_prefix + str(external_input_id)
-            buffer = generate_io_buffer_for_non_data_layer(dnn.get_layers()[0], buffer_name, buffer_subtype)
+            input_layer = dnn.get_layers()[0]
+            user_partition = find_partition_for_layer(dnn, input_layer.name, partitions)
+            buffer = generate_io_buffer_for_non_data_layer(input_layer, buffer_name, buffer_subtype, user_partition)
             external_input_buffers.append(buffer)
 
     return external_input_buffers
 
 
-def generate_external_output_buffers(dnn):
+def generate_external_output_buffers(dnn, partitions=None):
     external_output_buffers = []
     external_output_id = 0
     buffer_subtype = "output_buffer"
@@ -237,38 +224,50 @@ def generate_external_output_buffers(dnn):
     if len(dnn.get_outputs()) > 0:
         for external_output in dnn.get_outputs():
             buffer_name = buffer_prefix + str(external_output_id)
+            user_partition = find_partition_for_layer(dnn, external_output.dnn_layer.name, partitions)
             buffer = generate_buffer_for_external_io(external_output.data_layer,
-                                                     external_output.dnn_layer.name,
                                                      buffer_name,
-                                                     buffer_subtype)
+                                                     buffer_subtype,
+                                                     user_partition)
             external_output_buffers.append(buffer)
             external_output_id += 1
     else:
         dnn_layers = dnn.get_layers()
         if len(dnn_layers) > 0:
             buffer_name = buffer_prefix + str(external_output_id)
-            buffer = generate_io_buffer_for_non_data_layer(dnn.get_layers()[-1], buffer_name, buffer_subtype)
+            output_layer = dnn.get_layers()[-1]
+            user_partition = find_partition_for_layer(dnn, output_layer.name, partitions)
+            buffer = generate_io_buffer_for_non_data_layer(output_layer, buffer_name, buffer_subtype, user_partition)
             external_output_buffers.append(buffer)
 
     return external_output_buffers
 
 
-def generate_buffer_for_external_io(data_layer, dnn_layer_name, name, subtype):
+def find_partition_for_layer(dnn, layer_name, partitions=None):
+    if partitions is None:
+        return dnn.name
+    for partition in partitions:
+        if partition.find_layer_by_name(layer_name) is not None:
+            return partition.name
+    return dnn.name
+
+
+def generate_buffer_for_external_io(data_layer, name, subtype, user_partition):
     buffer_size = data_layer.oh * data_layer.ow * data_layer.ofm
     buffer = DataBuffer(name, buffer_size)
-    buffer.users.append(dnn_layer_name)
+    buffer.users.append(user_partition)
     buffer.type = "single_buffer"
     buffer.subtype = subtype
     return buffer
 
 
-def generate_io_buffer_for_non_data_layer(dnn_layer, name, subtype):
+def generate_io_buffer_for_non_data_layer(dnn_layer, name, subtype, user_partition):
     if subtype == "input_buffer":
         buffer_size = dnn_layer.ih * dnn_layer.iw * dnn_layer.ifm
     else:
         buffer_size = dnn_layer.oh * dnn_layer.ow * dnn_layer.ofm
     buffer = DataBuffer(name, buffer_size)
-    buffer.users.append(dnn_layer.name)
+    buffer.users.append(user_partition)
     buffer.type = "single_buffer"
     buffer.subtype = subtype
     return buffer

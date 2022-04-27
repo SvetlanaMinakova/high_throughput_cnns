@@ -98,6 +98,7 @@ def main():
             print_stage(stage, verbose)
             code_folder = output_dir + "/code/cpu_partitioned"
             codegen.arm_cl.arm_cl_dnn_visitor.visit_dnn_partitioned(partitioned_dnn,
+                                                                    connections,
                                                                     code_folder,
                                                                     verbose)
         else:

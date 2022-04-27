@@ -10,25 +10,29 @@
 #include <thread>
 #include <string>
 #include "types.h"
+#include "Subnet.h"
 
 using namespace arm_compute::utils;
 using namespace arm_compute::graph::frontend;
 using namespace arm_compute::graph_utils;
 
-class cpu_engine{
+class cpu_engine: public Subnet{
 public:
- cpu_engine(int argc, char *argv[], Example *dnn_ptr, std::string name); // float* input, float *output parameters removed
- ~cpu_engine();
-  void main(void *par);
-
-  Example* dnn_ptr;
-  
-  /**
-  // I/O buffers moved into SharedBuffer objects
-  float *input;
-  float *output;
-  */
-  std::string name; 
-
+   // constructor
+   cpu_engine(int argc, char *argv[], Example *dnn_ptr, std::string name): Subnet (name, frames, 0, 0){
+   this->name = name;
+   this->dnn_ptr = dnn_ptr;
+   bool status = this->dnn_ptr->do_setup(argc, argv);
+   if(!status)
+        std::cerr << std::endl<< "CPU ENGINE "<<this->name<<" SETUP ERROR " << std::endl;
+   else  
+        std::cout<<"CPU ENGINE "<<this->name<<" CREATED!"<<std::endl;
+   }
+ 
+   //desctructor
+   ~cpu_engine();
+   void main(void *thread_par) override;
+   Example* dnn_ptr;
+   std::string name; 
 };
 #endif // cpu_engine_H
