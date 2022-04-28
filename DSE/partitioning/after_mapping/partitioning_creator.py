@@ -3,7 +3,7 @@ import random
 import json
 
 """
-Creates dnn dnn_partitioning from dnn mapping
+Creates dnn partitioning from dnn mapping
 """
 
 
@@ -318,7 +318,7 @@ def save_partitions_to_file(partitions, processor_labels, task_labels, filepath)
             json_obj_list.append(json_p_obj)
 
     save_list_as_json(json_obj_list, filepath)
-    print("dnn_partitioning is saved in file", filepath)
+    print("partitioning is saved in file", filepath)
 
 """
 Print partitions to convole
@@ -379,7 +379,7 @@ def find_partition(proc, startTaskId):
 
 
 """
-tests dnn_partitioning creator
+tests partitioning creator
 """
 def test():
 

@@ -2,7 +2,7 @@ from codegen.codegen_visitor import CodegenVisitor
 from codegen.codegen_config import CodegenFlag
 from codegen.buffers_visitor import buf_type_to_buf_class
 from models.app_model.InterDNNConnection import InterDNNConnection
-from models.data_buffers import DataBuffer
+from models.data_buffers.data_buffers import DataBuffer
 
 
 def generate_app_main(directory,

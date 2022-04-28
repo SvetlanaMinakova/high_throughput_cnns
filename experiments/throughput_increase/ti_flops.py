@@ -1,7 +1,7 @@
 from util import milli
 
 """
-Increase dnn additional, using efficient dnn_partitioning, mapping and scheduling, and
+Increase dnn additional, using efficient partitioning, mapping and scheduling, and
 FLOPS-based latency/additional evaluation
 The experiment corresponds to Chapter 3
 """

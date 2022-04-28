@@ -1,4 +1,4 @@
-from dnn_partitioning.after_mapping.partitioning_creator import layer_outputs, layer_inputs
+from DSE.partitioning.after_mapping.partitioning_creator import layer_outputs, layer_inputs
 from models.TaskGraph import get_example_graph
 
 

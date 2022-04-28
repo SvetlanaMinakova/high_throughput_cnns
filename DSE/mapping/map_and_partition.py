@@ -206,6 +206,6 @@ def get_partitioning(dnn, dnn_task_graph, mapping):
         functionality of the original DNN
         connections: connections between the DNN partitions
     """
-    from dnn_partitioning.after_mapping.partition_dnn_with_mapping import partition_dnn_with_task_graph_and_mapping
+    from DSE.partitioning.after_mapping.partition_dnn_with_mapping import partition_dnn_with_task_graph_and_mapping
     partitions, connections = partition_dnn_with_task_graph_and_mapping(dnn, dnn_task_graph, mapping)
     return partitions, connections

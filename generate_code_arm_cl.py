@@ -15,7 +15,7 @@ def main():
     from models.dnn_model.dnn import set_built_in
     from models.dnn_model.transformation.ops_fusion import fuse_built_in
     from converters.json_converters.json_task_graph import parse_task_graph_json
-    from dnn_partitioning.before_mapping.partition_dnn_with_task_graph import partition_dnn_with_task_graph
+    from DSE.partitioning.before_mapping.partition_dnn_with_task_graph import partition_dnn_with_task_graph
     from util import print_stage
     import codegen.arm_cl.arm_cl_dnn_visitor
 

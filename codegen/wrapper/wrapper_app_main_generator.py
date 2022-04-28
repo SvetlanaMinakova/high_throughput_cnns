@@ -1,5 +1,5 @@
 from codegen.codegen_visitor import CodegenVisitor
-from models.data_buffers import DataBuffer
+from models.data_buffers.data_buffers import DataBuffer
 from codegen.wrapper.static_lib_info import get_static_lib_class_names
 from codegen.buffers_visitor import buf_type_to_buf_class
 

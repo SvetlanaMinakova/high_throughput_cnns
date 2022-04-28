@@ -4,7 +4,7 @@ import codegen.tensorrt.tensorrt_dnn_visitor
 from converters.dnn_to_task_graph import dnn_to_task_graph, dnn_to_task_graph_with_built_in
 import sys
 import traceback
-from dnn_partitioning.before_mapping.partition_dnn_with_task_graph import partition_dnn_with_task_graph
+from DSE.partitioning.before_mapping.partition_dnn_with_task_graph import partition_dnn_with_task_graph
 
 
 def visit_dnn(dnn: DNN, code_dir, built_in, verbose=True):
@@ -33,7 +33,7 @@ def visit_dnn(dnn: DNN, code_dir, built_in, verbose=True):
         else:
             tg = dnn_to_task_graph_with_built_in(dnn, built_in_ops=built_in)
 
-        stage = "dnn dnn_partitioning with task graph"
+        stage = "dnn partitioning with task graph"
         partitioned_dnn, connections = partition_dnn_with_task_graph(dnn, tg)
 
         stage = "CPU (partitioned) code generation"

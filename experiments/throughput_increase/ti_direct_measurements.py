@@ -1,7 +1,7 @@
 from util import milli
 
 """
-Evaluate increase of a dnn additional, using efficient dnn_partitioning, mapping and scheduling, and
+Evaluate increase of a dnn additional, using efficient partitioning, mapping and scheduling, and
 Direct measurements based latency/additional evaluation
 The experiment corresponds to Chapter 3
 """

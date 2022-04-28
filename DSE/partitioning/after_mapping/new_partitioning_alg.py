@@ -1,6 +1,6 @@
 
 """
-Creates dnn dnn_partitioning from dnn mapping (TEST VERSION)
+Creates dnn partitioning from dnn mapping (TEST VERSION)
 """
 
 

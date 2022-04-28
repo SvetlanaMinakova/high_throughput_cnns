@@ -7,8 +7,9 @@ import codegen.makefile_generator
 import codegen.app_main_generator
 import codegen.codegen_config
 from codegen.arm_cl.dnn_to_streams import DNNSubStreamsGenerator
-from models.app_model.dnn_inf_model import generate_external_input_buffers, generate_external_output_buffers
+from DSE.buffers_generation.inter_dnn_buffers_builder import generate_inter_partition_buffers
 from models.app_model.InterDNNConnection import InterDNNConnection
+from DSE.scheduling.dnn_scheduling import DNNScheduling
 
 
 def visit_dnn(dnn: DNN, code_dir, verbose=True):
@@ -105,6 +106,8 @@ def visit_dnn_partitioned(dnn_partitions: [DNN],
                                                      sub_streams_generator=sub_streams_generator)
         codegen.arm_cl.h.h_dnn_visitor.visit_dnn(partition, code_dir, profile=True,
                                                  sub_streams_generator=sub_streams_generator)
+    # generate I/O buffers
+    io_buffers = generate_inter_partition_buffers(inter_partition_connections, schedule_type=DNNScheduling.SEQUENTIAL)
 
     # generate app main
     codegen.app_main_generator.generate_app_main(code_dir,
@@ -113,7 +116,9 @@ def visit_dnn_partitioned(dnn_partitions: [DNN],
                                                  cpu_partition_class_names,
                                                  codegen_flags,
                                                  cpu_cores_allocation,
-                                                 inter_partition_connections)
+                                                 inter_partition_connections,
+                                                 io_buffers
+                                                 )
     # generate makefile
     codegen.makefile_generator.generate_makefile(code_dir,
                                                  gpu_partition_class_names,
@@ -122,7 +127,7 @@ def visit_dnn_partitioned(dnn_partitions: [DNN],
 
     copy_static_app_code(code_dir)
     if verbose:
-        print("ARM-CL (CPU) code is generated in", code_dir)
+        print("ARM-CL (CPU) partitioned code is generated in", code_dir)
 
 
 

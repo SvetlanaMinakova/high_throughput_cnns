@@ -3,7 +3,7 @@ from fileworkers.common_fw import create_or_overwrite_dir
 from models.dnn_model.dnn import DNN
 from models.edge_platform.Architecture import Architecture
 from models.app_model.dnn_inf_model import DNNInferenceModel
-from dnn_partitioning.after_mapping.partition_dnn_with_inf_model import partition_dnn_with_dnn_inference_model
+from DSE.partitioning.after_mapping.partition_dnn_with_inf_model import partition_dnn_with_dnn_inference_model
 # tensorRT (GPU) code
 import codegen.tensorrt.cpp.cpp_dnn_visitor
 import codegen.tensorrt.h.h_dnn_visitor
