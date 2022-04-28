@@ -185,7 +185,7 @@ class WrapperAppMainGenerator(CodegenVisitor):
             if name == class_name:
                 return partition_id
             partition_id += 1
-        raise Exception("Class name " + class_name + " not defined in the partiiton classes list")
+        raise Exception("Class name " + class_name + " not defined in the partition classes list")
 
     def _find_buffer_for_connection(self, connection_desc: {}):
         connection_name = connection_desc["name"]

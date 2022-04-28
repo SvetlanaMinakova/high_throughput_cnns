@@ -40,9 +40,13 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
                                              sub_streams_generator=sub_streams_generator)
 
     # generate I/O buffers
+    # No inter-dnn buffers are used for a single-dnn application
+    io_buffers = []
+    """
     input_buffers = generate_external_input_buffers(dnn)
     output_buffers = generate_external_output_buffers(dnn)
     io_buffers = input_buffers + output_buffers
+    """
 
     # there is only one partition, and thus no connections between partitions
     inter_partition_connections = []

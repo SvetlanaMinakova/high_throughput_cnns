@@ -32,9 +32,13 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
     codegen.tensorrt.h.h_dnn_visitor.visit_dnn(dnn, code_dir, gpu_profile=True)
 
     # generate I/O buffers
+    # No inter-dnn buffers are used for a single-dnn application
+    io_buffers = []
+    """
     input_buffers = generate_external_input_buffers(dnn)
     output_buffers = generate_external_output_buffers(dnn)
     io_buffers = input_buffers + output_buffers
+    """
 
     # there is only one partition, and thus no connections between partitions
     inter_partition_connections = []

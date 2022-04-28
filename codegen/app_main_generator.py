@@ -1,6 +1,8 @@
 from codegen.codegen_visitor import CodegenVisitor
 from codegen.codegen_config import CodegenFlag
 from codegen.buffers_visitor import buf_type_to_buf_class
+from models.app_model.InterDNNConnection import InterDNNConnection
+from models.data_buffers import DataBuffer
 
 
 def generate_app_main(directory,
@@ -9,8 +11,8 @@ def generate_app_main(directory,
                       cpu_partition_class_names: [],
                       flags: [CodegenFlag],
                       cpu_core_per_class_name: {},
-                      inter_partition_connections: [],
-                      inter_partition_buffers=None):
+                      inter_partition_connections: [InterDNNConnection],
+                      inter_partition_buffers: [DataBuffer]):
     """
         generate main application file
         :param directory: directory to generate main application file in
@@ -49,7 +51,7 @@ class AppMainGenerator(CodegenVisitor):
                  flags: [CodegenFlag],
                  cpu_core_per_class_name: {},
                  inter_partition_connections: [],
-                 inter_partition_buffers=None):
+                 inter_partition_buffers: []):
         """
         Create new application main-file generator
         :param print_file: file to print app-main code in
@@ -146,12 +148,9 @@ class AppMainGenerator(CodegenVisitor):
 
         self.write_line("std::cout<<\"***DNN building phase.***\"<<std::endl;")
         self._create_partitions()
-        # TODO: buffers reuse!
-        self._create_local_buffers()
+        self._create_buffers()
         self._create_engines()
         self._create_pthread_parameters()
-        # TODO: re-design of global buffers is required
-        # _createGlobalBuffers(dnn.getConnections(), partitionClassesInExecutionOrder);
         self._inference()
         self._clean_memory()
         self.write_line("")
@@ -179,100 +178,83 @@ class AppMainGenerator(CodegenVisitor):
     ##############
     # BUFFERS
         
-    def _create_local_buffers(self):
-        self.write_line("////////////////////////////////////////////////")
-        self.write_line("// CREATE I/O BUFFERS FOR DNN/DNN PARTITIONS //")
+    def _create_buffers(self):
+        self.write_line("////////////////////////////////////////////")
+        self.write_line("// CREATE BUFFERS BETWEEN DNN PARTITIONS //")
         self.write_line("std::cout<<\" - I/O buffers allocation.\"<<std::endl;")
-        if self.inter_partition_buffers is None:
-            self._create_naive_local_buffers()
-        else:
-            self._create_specified_local_buffers()
+        if len(self.inter_partition_buffers) > 0:
+            self._define_inter_partition_buffers()
+            self.write_line("")
+            self._allocate_inter_partition_buffers()
+        self.write_line("")
 
     ####################################
-    # explicitly specified local buffers
-    def _create_specified_local_buffers(self):
+    #  buffers between DNN partitions
+    def _define_inter_partition_buffers(self):
         self.write_line("// create and init buffers")
         for buffer in self.inter_partition_buffers:
             buf_class = buf_type_to_buf_class(buffer.type)
             self.write_line(buf_class + " " + buffer.name + ";")
             self.write_line(buffer.name + ".init(" + "\"" + buffer.name + "\"" + ", " + str(buffer.size) + ");")
-        self.write_line("")
 
-    def _allocate_specified_local_buffers(self):
+    def _allocate_inter_partition_buffers(self):
         self.write_line("// allocate buffers to cpu/gpu engines")
         for buffer in self.inter_partition_buffers:
-            sources = self.get_buf_src_partition_names(buffer)
+            self.write_line("// " + buffer.name)
+            source_class_names = self._get_buf_src_class_names(buffer)
+            destination_class_names = self._get_buf_dst_class_names(buffer)
 
-        self.write_line("")
+            for class_name in source_class_names:
+                engine_name = self._get_engine_name(class_name)
+                self.write_line(engine_name + ".addInputBufferPtr(&" + buffer.name + ");")
 
-    def get_buf_src_partition_names(self, buffer):
-        if buffer.type == "input_buffer":
+            for class_name in destination_class_names:
+                engine_name = self._get_engine_name(class_name)
+                self.write_line(engine_name + ".addOutputBufferPtr(&" + buffer.name + ");")
+
+    def _get_buf_src_class_names(self, buffer):
+        if buffer.subtype == "input_buffer":
             return buffer.users
-        if buffer.type == "output_buffer":
+        if buffer.subtype == "output_buffer":
             return []
         # i/o buffer
         # extract i/o buffer sources from connection
+        src_class_names = []
         for connection in self.inter_partition_connections:
-            pass
+            if connection.name in buffer.users:
+                src_class_names.append(connection.src.name)
+        return src_class_names
 
-    ####################################
-    # naive local buffers
+    def _get_buf_dst_class_names(self, buffer):
+        if buffer.subtype == "input_buffer":
+            return []
+        if buffer.subtype == "output_buffer":
+            return buffer.users
+        # i/o buffer
+        # extract i/o buffer sources from connection
+        dst_class_names = []
+        for connection in self.inter_partition_connections:
+            if connection.name in buffer.users:
+                dst_class_names.append(connection.dst.name)
+        return dst_class_names
 
-    def _create_naive_local_buffers(self):
-        self.write_line("//GPU")
-        for name in self.gpu_partition_names:
-            self._create_naive_local_in_buffer(name)
-            self._create_naive_local_out_buffer(name)
+    def _get_engine_name(self, class_name: str):
+        engine_id = self._get_class_id(class_name)
+        engine_name = "p" + str(engine_id)
+        return engine_name
 
-        self.write_line("")
-        self.write_line("//CPU")
+    def _get_partition_name(self, class_name: str):
+        partition_id = self._get_class_id(class_name)
+        partition_name = "p" + str(partition_id)
+        return partition_name
 
-        for name in self.cpu_partition_names:
-            self._create_naive_local_in_buffer(name)
-            self._create_naive_local_out_buffer(name)
-
-        self.write_line("")
-
-    def _create_naive_local_in_buffer(self, partition_name):
-        self.write_line("float " + partition_name + "_input[" + partition_name + ".batchSize *  " + partition_name +
-                        ".INPUT_H * " + partition_name + ".INPUT_W * " + partition_name + ".INPUT_C] = {0};")
-
-    def _create_naive_local_out_buffer(self, partition_name):
-        self.write_line("float " + partition_name + "_output[" + partition_name + ".batchSize * "
-                        + partition_name + ".OUTPUT_SIZE] = {0};")
-
-    #####################
-    # reuse local buffers
-    # TODO: rewrite as global buffers
-    def _create_reuse_local_buffers(self):
-        # define reused buffers
-        self.write_line("//Reused CPU/GPU buffers")
-        for buffer in self.inter_partition_buffers:
-            self._create_reused_local_buffer(buffer)
-        print("")
-
-        # assign reused buffers or define naive local buffers
-        self.write_line("//GPU")
-        for name in self.gpu_partition_names:
-            src_is_a_reused_buf = False
-
-        print("")
-
-    def _create_reused_local_buffer(self, dnn_buffer):
-        self.write_line("float " + dnn_buffer.name + "[" + str(int(dnn_buffer.size))+"] = {0};")
-
-    def _assign_reused_local_buffer(self, dnn_buffer, src_partition_name, dst_partition_name):
-        """ Define channel I/O buffers as a reference on pre-defined reuse buffer array"""
-        local_buf_src = src_partition_name + "_output"
-        local_buf_dst = dst_partition_name + "_input"
-        self._define_local_buffer_as_reference(dnn_buffer.name, local_buf_src, dnn_buffer.size)
-        self._define_local_buffer_as_reference(dnn_buffer.name, local_buf_dst, dnn_buffer.size)
-
-    def _define_local_buffer_as_reference(self, reference_array_name, referred_array_name, referred_array_size):
-        """Define local buffer as a reference on pre-defined static float array."""
-        self.write_line("float (&" + reference_array_name + ")" +
-                        "[" + str(referred_array_size) + "]" +
-                        "=" + referred_array_name + ";")
+    def _get_class_id(self, class_name: str):
+        partition_id = 0
+        for name in self.class_names_in_exec_order:
+            if name == class_name:
+                return partition_id
+            partition_id += 1
+        raise Exception("Class name " + class_name + " not defined in the partition classes list")
 
     #########################
     ### engines
@@ -476,19 +458,4 @@ class AppMainGenerator(CodegenVisitor):
 
         self.write_line("free(thread_info);")
         self.write_line("")
-
-        """
-        TODO: re-design global buffers!!!
-        self.write_line("//free global buffers")
-        self.write_line("std::cout<<\" - Buffers deallocation\"<<std::endl;")
-
-        self.write_line("for (int i=0; i<fifos.size(); i++) {")
-        self.prefix_inc()
-        self.write_line("free(fifos[i].fifo);")
-        self.prefix_dec()
-        self.write_line("}")
-        """
-
-
-
 

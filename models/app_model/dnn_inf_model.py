@@ -173,11 +173,11 @@ def generate_dnn_inference_model(dnn: DNN,
     # generate application buffers
     app_buffers = []
     # DNN input buffers
-    input_buffers = generate_external_input_buffers(dnn, sorted_partitions)
-    app_buffers = app_buffers + input_buffers
+    # input_buffers = generate_external_input_buffers(dnn, sorted_partitions)
+    # app_buffers = app_buffers + input_buffers
     # DNN output buffers
-    output_buffers = generate_external_output_buffers(dnn, sorted_partitions)
-    app_buffers = app_buffers + output_buffers
+    # output_buffers = generate_external_output_buffers(dnn, sorted_partitions)
+    # app_buffers = app_buffers + output_buffers
     # buffers among DNN partitions
     inter_partition_buffers = _generate_inter_partition_buffers()
     app_buffers = app_buffers + inter_partition_buffers

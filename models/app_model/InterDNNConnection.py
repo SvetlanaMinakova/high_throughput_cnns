@@ -1,3 +1,6 @@
+from models.dnn_model.dnn import DNN
+
+
 class InterDNNConnection:
     """
         Connection between two DNNs/ DNN partitions
@@ -9,7 +12,7 @@ class InterDNNConnection:
             data_w, data_h, data_ch: dimensions of data tensor, transferred through connection:
             width, height and number of channels, respectively
     """
-    def __init__(self, name, src, dst, data_w, data_h, data_ch):
+    def __init__(self, name, src: DNN, dst: DNN, data_w, data_h, data_ch):
         self.name = name
         self.src = src
         self.dst = dst
@@ -23,10 +26,6 @@ class InterDNNConnection:
 
     def get_data_size(self):
         return self.data_w * self.data_h * self.data_ch
-
-
-
-
 
 """
 class SingleDNNAppModel:
