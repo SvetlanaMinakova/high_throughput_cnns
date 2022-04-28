@@ -50,7 +50,7 @@ class DNNARMCLCPPVisitor(CodegenVisitor):
         arm_cl_headers = ["arm_compute/graph", "support/ToolchainSupport",
                           "utils/CommonGraphOptions", "utils/GraphUtils", "utils/Utils"]
         std_lib_headers = ["chrono", "thread"]
-        local_headers = [self.class_name, "fifo", "types"]
+        local_headers = [self.class_name, "types"] # "fifo"
         for header in arm_cl_headers:
             self._include_local_cpp_header(header)
         for header in std_lib_headers:

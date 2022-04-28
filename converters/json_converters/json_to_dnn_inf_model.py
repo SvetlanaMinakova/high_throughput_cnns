@@ -1,6 +1,6 @@
 from models.app_model.dnn_inf_model import DNNInferenceModel
 from DSE.scheduling.dnn_scheduling import str_to_scheduling
-from models.data_buffers import DataBuffer
+from models.data_buffers.data_buffers import DataBuffer
 import json
 from converters.json_converters.json_util import extract_or_default
 

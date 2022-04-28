@@ -100,10 +100,11 @@ void cpu_engine::main(void *thread_par) {
             // this->dnn_ptr->doWrite(this->output, this->cuda_stream_ptr);
             // Buffer locks will be automatically released here after
             // readingLocks and  updateLocks vectors reach the scope end and are cleared
+        }
   }
 
   catch(std::runtime_error &err){
-   std::cerr << std::endl<< "CPU ENGINE ERROR " << err.what() << " " << (errno ? strerror(errno) : "") << std::endl;
-   return;
- }
+    std::cerr << std::endl<< "CPU ENGINE ERROR " << err.what() << " " << (errno ? strerror(errno) : "") << std::endl;
+    return;
+  }
 }

@@ -154,6 +154,7 @@ def get_pad_stride_info_line(layer):
 
     return line
 
+
 def is_global_pooling(layer):
     if "global" in layer.subop:
         return True

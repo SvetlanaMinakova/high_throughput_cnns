@@ -14,6 +14,8 @@ def main():
     from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
     from models.dnn_model.dnn import set_built_in
     from models.dnn_model.transformation.ops_fusion import fuse_built_in
+    from converters.json_converters.json_task_graph import parse_task_graph_json
+    from DSE.partitioning.before_mapping.partition_dnn_with_task_graph import partition_dnn_with_task_graph
     from util import print_stage
     import codegen.tensorrt.tensorrt_dnn_visitor
 
@@ -39,11 +41,22 @@ def main():
                              ' output date (output buffer) of their own.'
                              ' NOTE: LIST OF FUSED OPS SHOULD NOT CHANGE BETWEEN THE SUBSEQUENT SCRIPTS')
 
+    parser.add_argument('-tg', metavar='--task-graph', type=str, action='store', default=None,
+                        help='path to .json file with the task-graph (SDF) model generated '
+                             'for the input cnn by the ./dnn_to_sdf_task_graph.py script. This input is required'
+                             'when --partitioned flag is used')
+
+    parser.add_argument("--partitioned", action='store_true', default=False,
+                        help="generates TensorRT code where every task graph node is represented as a DNN partition "
+                             "(sub-network). When --partitioned flag is specified, the DNN task graph (-tg) "
+                             "should be passed to the script as well")
+
     parser.add_argument('-o', metavar='--out-dir', type=str, action='store', default="./output",
                         help='path to output files directory')
 
     # general flags
-    parser.add_argument("--silent", help="do not provide print-out for the script steps", action="store_true", default=False)
+    parser.add_argument("--silent", help="do not provide print-out for the script steps",
+                        action="store_true", default=False)
 
     args = parser.parse_args()
     try:
@@ -54,6 +67,9 @@ def main():
         verbose = not silent
         fused_ops_spec = args.fo
         fused_ops = fused_ops_spec.split(',')
+        # per-layer mode
+        partitioned = args.partitioned
+        task_graph_path = args.tg
 
         # read DNN
         stage = "Reading input DNN"
@@ -69,10 +85,30 @@ def main():
             set_built_in(dnn, fused_ops)
             fuse_built_in(dnn)
 
-        stage = "Generating TensorRT (GPU) code"
-        print_stage(stage, verbose)
-        code_folder = output_dir + "/code/gpu"
-        codegen.tensorrt.tensorrt_dnn_visitor.visit_dnn(dnn, code_folder)
+        if partitioned:
+            stage = "Reading task graph (SDF) model "
+            print_stage(stage, verbose)
+            if task_graph_path is None:
+                raise Exception(
+                    "Task Graph path is None. You must specify path to task graph to use --partitioned flag")
+            task_graph = parse_task_graph_json(task_graph_path)
+
+            stage = "Partitioning DNN with task graph (SDF) model "
+            print_stage(stage, verbose)
+            partitioned_dnn, connections = partition_dnn_with_task_graph(dnn, task_graph)
+
+            stage = "GeneratingTensorRT (GPU) code (PER PARTITION)"
+            print_stage(stage, verbose)
+            code_folder = output_dir + "/code/gpu_partitioned"
+            codegen.tensorrt.tensorrt_dnn_visitor.visit_dnn_partitioned(partitioned_dnn,
+                                                                        connections,
+                                                                        code_folder,
+                                                                        verbose)
+        else:
+            stage = "Generating TensorRT (GPU) code"
+            print_stage(stage, verbose)
+            code_folder = output_dir + "/code/gpu"
+            codegen.tensorrt.tensorrt_dnn_visitor.visit_dnn(dnn, code_folder)
 
     except Exception as e:
         print("TensorRT (GPU) code generation error: " + str(e))

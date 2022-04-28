@@ -50,11 +50,13 @@ def main():
                         help='path to output files directory')
 
     # general flags
-    parser.add_argument("--silent", help="do not provide print-out for the script steps", action="store_true", default=False)
+    parser.add_argument("--silent", help="do not provide print-out for the script steps",
+                        action="store_true", default=False)
     parser.add_argument("--partitioned", action='store_true', default=False,
                         help="generates ARM-CL code where every task graph node is represented as a DNN partition "
                              "(sub-network). This mode is used for Task Graph (SDF) latency measurement on the "
-                             "platform. When this flag is use, the DNN task graph should be passed to the script")
+                             "platform. When --partitioned flag is specified, the DNN task graph (-tg) "
+                             "should be passed to the script as well")
 
     args = parser.parse_args()
     try:

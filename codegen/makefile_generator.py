@@ -39,7 +39,7 @@ class MakefileGenerator(CodegenVisitor):
         super().__init__(print_file, prefix="")
         self.gpu_partition_class_names = gpu_partition_class_names
         self.cpu_partition_class_names = cpu_partition_class_names
-        self.custom_buffers_class_names = ["Subnet", "SingleBuffer", "DoubleBuffer", "SharedBuffer", "types"]
+        self.custom_buffers_class_names = ["Subnet", "SingleBuffer", "DoubleBuffer", "SharedBuffer", "types", "Timer"]
         self.arm_cl = arm_cl
         self.trt = trt
         self.config = get_config()

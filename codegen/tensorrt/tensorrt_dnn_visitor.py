@@ -6,8 +6,9 @@ import codegen.tensorrt.h.h_dnn_visitor
 import codegen.makefile_generator
 import codegen.app_main_generator
 import codegen.codegen_config
-from models.app_model.dnn_inf_model import generate_external_input_buffers, generate_external_output_buffers
 from models.app_model.InterDNNConnection import InterDNNConnection
+from DSE.buffers_generation.inter_dnn_buffers_builder import generate_inter_partition_buffers
+from DSE.scheduling.dnn_scheduling import DNNScheduling
 
 
 def visit_dnn(dnn: DNN, code_dir, verbose=True):
@@ -76,7 +77,7 @@ def visit_dnn_partitioned(dnn_partitions: [DNN],
     :param verbose: print details
     """
     create_or_overwrite_dir(code_dir)
-    codegen_flags = [codegen.codegen_config.CodegenFlag.GPU_PROFILE]
+    codegen_flags = [] # codegen.codegen_config.CodegenFlag.GPU_PROFILE
 
     # attributes
     class_names_in_exec_order = [partition.name for partition in dnn_partitions]
@@ -86,8 +87,12 @@ def visit_dnn_partitioned(dnn_partitions: [DNN],
 
     # visit every partition
     for partition in dnn_partitions:
-        codegen.tensorrt.cpp.cpp_dnn_visitor.visit_dnn(partition, code_dir, gpu_profile=True)
-        codegen.tensorrt.h.h_dnn_visitor.visit_dnn(partition, code_dir, gpu_profile=True)
+        codegen.tensorrt.cpp.cpp_dnn_visitor.visit_dnn(partition, code_dir, gpu_profile=False)
+        codegen.tensorrt.h.h_dnn_visitor.visit_dnn(partition, code_dir, gpu_profile=False)
+
+    # generate I/O buffers
+    io_buffers = generate_inter_partition_buffers(inter_partition_connections,
+                                                  schedule_type=DNNScheduling.SEQUENTIAL)
 
     # generate app main
     codegen.app_main_generator.generate_app_main(code_dir,
@@ -96,7 +101,8 @@ def visit_dnn_partitioned(dnn_partitions: [DNN],
                                                  cpu_partition_class_names,
                                                  codegen_flags,
                                                  cpu_cores_allocation,
-                                                 inter_partition_connections)
+                                                 inter_partition_connections,
+                                                 io_buffers)
     # generate makefile
     codegen.makefile_generator.generate_makefile(code_dir,
                                                  gpu_partition_class_names,

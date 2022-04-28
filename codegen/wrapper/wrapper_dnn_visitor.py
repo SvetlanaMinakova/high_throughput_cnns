@@ -1,7 +1,6 @@
 from codegen.codegen_visitor import copy_static_app_code
 from fileworkers.common_fw import create_or_overwrite_dir
 from models.dnn_model.dnn import DNN
-from models.edge_platform.Architecture import Architecture
 from models.app_model.dnn_inf_model import DNNInferenceModel
 from DSE.partitioning.after_mapping.partition_dnn_with_inf_model import partition_dnn_with_dnn_inference_model
 from codegen.mixed.mixed_dnn_visitor import get_gpu_partition_class_names, get_cpu_cores_allocation
@@ -15,14 +14,12 @@ import codegen.codegen_config
 
 
 def visit_dnn_app(dnn: DNN,
-                  architecture: Architecture,
                   dnn_inf_model: DNNInferenceModel,
                   code_dir: str,
                   time_per_subnet: {},
                   verbose=False):
     """
     Generate ARM-CL code for a DNN
-    :param architecture: target platform architecture
     :param dnn: deep neural network
     :param dnn_inf_model: DNN inference model that specifies
         partitioning, mapping and scheduling of the dnn on the target platform

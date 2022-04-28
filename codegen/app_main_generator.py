@@ -120,7 +120,7 @@ class AppMainGenerator(CodegenVisitor):
         std_lib_headers = ["iostream", "map", "vector", "thread", "chrono"]
         gpu_lib_headers = ["cuda_runtime_api", "gpu_partition", "gpu_engine"]
         cpu_lib_headers = ["arm_compute/graph", "cpu_engine"]
-        custom_buffer_headers = ["types", "SingleBuffer", "DoubleBuffer"] # "SharedBuffer"
+        custom_buffer_headers = ["types", "SingleBuffer", "DoubleBuffer", "Timer"] # "SharedBuffer"
 
         local_lib_headers = []
         if self.trt > 0:
@@ -148,8 +148,8 @@ class AppMainGenerator(CodegenVisitor):
 
         self.write_line("std::cout<<\"***DNN building phase.***\"<<std::endl;")
         self._create_partitions()
-        self._create_buffers()
         self._create_engines()
+        self._create_buffers()
         self._create_pthread_parameters()
         self._inference()
         self._clean_memory()
@@ -206,11 +206,11 @@ class AppMainGenerator(CodegenVisitor):
 
             for class_name in source_class_names:
                 engine_name = self._get_engine_name(class_name)
-                self.write_line(engine_name + ".addInputBufferPtr(&" + buffer.name + ");")
+                self.write_line(engine_name + ".addOutputBufferPtr(&" + buffer.name + ");")
 
             for class_name in destination_class_names:
                 engine_name = self._get_engine_name(class_name)
-                self.write_line(engine_name + ".addOutputBufferPtr(&" + buffer.name + ");")
+                self.write_line(engine_name + ".addInputBufferPtr(&" + buffer.name + ");")
 
     def _get_buf_src_class_names(self, buffer):
         if buffer.subtype == "input_buffer":
@@ -240,7 +240,7 @@ class AppMainGenerator(CodegenVisitor):
 
     def _get_engine_name(self, class_name: str):
         engine_id = self._get_class_id(class_name)
-        engine_name = "p" + str(engine_id)
+        engine_name = "e" + str(engine_id)
         return engine_name
 
     def _get_partition_name(self, class_name: str):
@@ -304,7 +304,7 @@ class AppMainGenerator(CodegenVisitor):
             self.write_line("std::vector<gpu_engine*> gpu_engine_ptrs;")
             for gpu_engine_name in self.gpu_engine_names:
                 self.write_line("gpu_engine_ptrs.push_back(&" + gpu_engine_name + ");")
-                self.write_line("")
+            self.write_line("")
             
     def _create_pthread_parameters(self):
         self.write_line("/////////////////////////////////////////////////////////////")

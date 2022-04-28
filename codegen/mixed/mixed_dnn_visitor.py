@@ -1,7 +1,6 @@
 from codegen.codegen_visitor import copy_static_app_code
 from fileworkers.common_fw import create_or_overwrite_dir
 from models.dnn_model.dnn import DNN
-from models.edge_platform.Architecture import Architecture
 from models.app_model.dnn_inf_model import DNNInferenceModel
 from DSE.partitioning.after_mapping.partition_dnn_with_inf_model import partition_dnn_with_dnn_inference_model
 # tensorRT (GPU) code
@@ -15,16 +14,18 @@ from codegen.arm_cl.dnn_to_streams import DNNSubStreamsGenerator
 import codegen.makefile_generator
 import codegen.app_main_generator
 import codegen.codegen_config
+# buffers
+from DSE.buffers_generation.inter_dnn_buffers_builder import generate_inter_partition_buffers
+from models.app_model.InterDNNConnection import InterDNNConnection
+from DSE.scheduling.dnn_scheduling import DNNScheduling
 
 
 def visit_dnn_app(dnn: DNN,
-                  architecture: Architecture,
                   dnn_inf_model: DNNInferenceModel,
                   code_dir: str,
                   verbose=False):
     """
     Generate ARM-CL code for a DNN
-    :param architecture: target platform architecture
     :param dnn: deep neural network
     :param dnn_inf_model: DNN inference model that specifies
         partitioning, mapping and scheduling of the dnn on the target platform
@@ -70,6 +71,10 @@ def visit_dnn_app(dnn: DNN,
             codegen.arm_cl.h.h_dnn_visitor.visit_dnn(partition, code_dir, profile=True,
                                                      sub_streams_generator=sub_streams_generator)
 
+    # generate buffers
+    # generate I/O buffers
+    io_buffers = generate_inter_partition_buffers(connections, schedule_type=DNNScheduling.PIPELINE)
+
     # generate app main
     codegen.app_main_generator.generate_app_main(code_dir,
                                                  class_names_in_exec_order,
@@ -77,7 +82,8 @@ def visit_dnn_app(dnn: DNN,
                                                  cpu_partition_class_names,
                                                  codegen_flags,
                                                  cpu_cores_allocation,
-                                                 connections)
+                                                 connections,
+                                                 io_buffers)
     # generate makefile
     codegen.makefile_generator.generate_makefile(code_dir,
                                                  gpu_partition_class_names,
@@ -87,7 +93,7 @@ def visit_dnn_app(dnn: DNN,
 
     copy_static_app_code(code_dir)
     if verbose:
-        print("TensorRT code is generated in", code_dir)
+        print("Mixed (TensorRT GPU + ARM-CL CPU) code is generated in", code_dir)
 
 
 def get_gpu_partition_class_names(dnn_inf_model):
