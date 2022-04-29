@@ -153,7 +153,6 @@ class AppMainGenerator(CodegenVisitor):
         self._create_pthread_parameters()
         self._inference()
         self._clean_memory()
-        self.write_line("")
         self.write_line("return 0;")
         self.prefix_dec()
         self.write_line("}")
@@ -271,11 +270,6 @@ class AppMainGenerator(CodegenVisitor):
             # I/O s moved to SharedBuffers
             self.write_line("gpu_engine " + self.gpu_engine_names[pid] + " (&" + partition_name +
                             ", &" + partition_name + "_stream, \"" + engine_name + "\");")
-            """
-            self.write_line("gpu_engine " + self.gpu_engine_names[pid] + " (&" + partition_name + ", " +
-                            partition_name + "_input, " + partition_name + "_output, &" + 
-                            partition_name + "_stream, \"" + engine_name + "\");")
-            """
         self.write_line("")
         self.write_line("//CPU")
         for pid in range(len(self.cpu_engine_names)):
@@ -284,11 +278,6 @@ class AppMainGenerator(CodegenVisitor):
             # I/O s moved to SharedBuffers
             self.write_line("cpu_engine " + engine_name + " (argc, argv, &" +
                             partition_name + ", \"" + engine_name + "\");")
-            """
-            self.write_line("cpu_engine " + engine_name + " (argc, argv, " +
-                            partition_name + "_input, " + partition_name + "_output, &" +
-                            partition_name + ", \"" + engine_name + "\");")
-            """
 
         # if (_cpuDebugMode)
         if len(self.cpu_partition_names) > 0:
@@ -347,6 +336,7 @@ class AppMainGenerator(CodegenVisitor):
         self.write_line("// INFERENCE //")
         self.write_line("std::cout<<\"*** DNN inference phase.***\"<<std::endl;")
         self.write_line("")
+
         if CodegenFlag.CPU_PROFILE in self.flags:
             self._cpu_profile_inference()
         else:
@@ -390,50 +380,47 @@ class AppMainGenerator(CodegenVisitor):
         self.write_line("// set CPU ids here")
         self.write_line("int large_cpu_id = 1;")
         self.write_line("int small_cpu_id = 4;")
-
-        self.write_line("")
-        self.write_line("std::cout<<\"CPU eval_table over \"<<frames<< \" images\"<<std::endl;")
+        self.write_line("int cpu_ids[2] = {large_cpu_id, small_cpu_id};")
+        self.write_line("std::string cpu_labels[2] = {\"large_CPU\", \"small_CPU\"};")
         self.write_line("std::vector<float> cpu_time;")
-        # run everything on large CPU
-        self._cpu_debug_inference("large_cpu_id", "large_CPU")
-
-        self.write_line("// clear time direct_measurements")
-        self.write_line("cpu_time.clear();")
-        self.write_line("")
-        # run everything on small CPU
-        self._cpu_debug_inference("small_cpu_id", "small_CPU")
         self.write_line("")
 
-    def _cpu_debug_inference(self, core_id_str, benchmark_label: str):
+        self.write_line("// run partitions first on large CPU and then on small CPU")
+        self.write_line("for(int experiment_id=0; experiment_id<2; experiment_id++){")
+        self.prefix_inc()
         self.write_line("// allocate CPU cores")
         self.write_line("for(int i=0; i<num_threads; i++)")
         self.prefix_inc()
-        self.write_line("thread_info[i].core_id = " + core_id_str + ";")
+        self.write_line("thread_info[i].core_id = cpu_ids[experiment_id];")
         self.prefix_dec()
         self.write_line("")
-        self.write_line("//run eval_table")
-        self.write_line("for(int en=0; en<cpu_engine_ptrs.size();en++) {")
-        self.prefix_inc()
-        self.write_line("")
-        self.write_line("auto startTime = std::chrono::high_resolution_clock::now();")
+
+        self.write_line("// run inference")
+        self.write_line("std::cout<<\"Run inference on \"<<cpu_labels[experiment_id]<<std::endl;")
+        self._combined_inference()
         self.write_line("")
 
-        self.write_line("std::thread my_thread(&cpu_engine::main, cpu_engine_ptrs.at(en), &thread_info[en]);//(CPU)")
-        self.write_line("my_thread.join();")
-        self.write_line("auto endTime = std::chrono::high_resolution_clock::now();")
-        self.write_line("float totalTime = std::chrono::duration<float, std::milli>(endTime - startTime).count();")
-        self.write_line("cpu_time.push_back((totalTime/float(frames)));")
-        self.prefix_dec()
-        self.write_line("}")
-
+        self.write_line("// collect measurements")
+        for cpu_partition_name in self.cpu_partition_names:
+            self.write_line("cpu_time.push_back((" + cpu_partition_name + ".execTimeMS/float(frames)));")
         self.write_line("")
-        self.write_line("std::cout<<\"\\\"" + benchmark_label + "\\\" : [\";")
+
+        self.write_line("std::cout<<\"\\\"\"<<cpu_labels[experiment_id]<<\"\\\" : [\";")
         self.write_line("for(int i=0; i< cpu_time.size() - 1; i++)")
         self.prefix_inc()
         self.write_line("std::cout<<cpu_time.at(i)<<\", \";")
         self.prefix_dec()
         self.write_line("std::cout<<(cpu_time.at(cpu_time.size() - 1))<<\"], \"<<std::endl;")
+        self.write_line("cpu_time.clear();")
+
+        self.write_line("// reset time")
+        for cpu_partition_name in self.cpu_partition_names:
+            self.write_line(cpu_partition_name + ".execTimeMS=0;")
         self.write_line("")
+
+        self.prefix_dec()
+
+        self.write_line("}")
 
     def _clean_memory(self):
         """Clean platform memory"""

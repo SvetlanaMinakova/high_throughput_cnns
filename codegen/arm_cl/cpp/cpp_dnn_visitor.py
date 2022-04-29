@@ -22,7 +22,7 @@ class DNNARMCLCPPVisitor(CodegenVisitor):
         """
         super().__init__(print_file, prefix="")
         self.dnn = dnn
-        self.gpu_profile = profile
+        self.profile = profile
         self.input_layer = self.dnn.get_input_layer()
         self.output_layer = self.dnn.get_output_layer()
         self.class_name = dnn.name
@@ -284,15 +284,29 @@ class DNNARMCLCPPVisitor(CodegenVisitor):
         self.write_line("}")
 
     def _write_common_end(self):
-        self.write_do_run()
+        self._write_do_run()
         self._write_parallel_branches()
 
-    def write_do_run(self):
+    def _write_do_run(self):
         self.write_line("// Run graph")
         self.write_line("void " + self.class_name + "::do_run() { ")
         self.prefix_inc()
+
+        # time profiling: start timer
+        if self.profile:
+            self.write_line("auto startTime = std::chrono::high_resolution_clock::now();")
+            self.write_line("")
+
+        # main inference function
         self.write_line("graph.run();")
         self.prefix_dec()
+
+        # time profiling: stop timer and add time to the time counter
+        if self.profile:
+            self.write_line("auto endTime = std::chrono::high_resolution_clock::now();")
+            self.write_line("float frameTimeMS = std::chrono::duration<float, std::milli>(endTime - startTime).count();")
+            self.write_line("this->execTimeMS += frameTimeMS;")
+
         self.write_line("}")
         self.write_line("")
 

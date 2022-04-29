@@ -129,6 +129,9 @@ class DNNARMCLHVisitor(CodegenVisitor):
         self.write_line("int OUTPUT_H = " + str(output_layer.oh) + ";")
         self.write_line("int OUTPUT_W = " + str(output_layer.ow) + ";")
         self.write_line("int OUTPUT_SIZE = OUTPUT_C * OUTPUT_H * OUTPUT_W;")
+        self.write_line("")
+
+        self.write_line("float execTimeMS = 0;")
         self.prefix_dec()
 
     def _write_common_end(self):

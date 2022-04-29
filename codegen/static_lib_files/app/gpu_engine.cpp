@@ -46,7 +46,8 @@ void generateEvalJSON(std::string filepath){
        eval_file << "{\n\"layers\": [";
        for( auto record : mProfile){
             std::string layer_name = record.first.c_str();
-            // replace merge ( + ) symbol, incorrect for json with symbol "_" 
+             // replace merge ( + ) symbol json with symbol "_" to allow for saving/parsing
+            // resulting json
             int plus_id = layer_name.find(" + ");
             if(plus_id!=string::npos)
                 layer_name.replace(plus_id, 3, "_");
@@ -74,17 +75,16 @@ void generateEvalJSON(std::string filepath){
     }    
 
 void printLayerNames(){
-        
-        for( auto record : mProfile){
-            std::string layer_name = record.first.c_str();
-            // replace merge ( + ) symbol, incorrect for json with symbol "_" 
-            int plus_id = layer_name.find(" + ");
-            if(plus_id!=string::npos)
-                layer_name.replace(plus_id, 3, "_");
-            
+    for( auto record : mProfile){
+        std::string layer_name = record.first.c_str();
+        // replace merge ( + ) symbol json with symbol "_" to allow for saving/parsing
+        // resulting json
+        int plus_id = layer_name.find(" + ");
+        if(plus_id!=string::npos)
+            layer_name.replace(plus_id, 3, "_");
             std::cout<<layer_name<<std::endl;
         }
-        }
+}
 
     float getLayerTime(const char* layerName)
     {   
@@ -143,7 +143,7 @@ void gpu_engine::main(void *thread_par) {
                 updateLocks.push_back(std::move(lock));
             }
 	
-	     ///////////////////
+	        ///////////////////
             // perform reading
             for (auto bufPtr: inputBufferPtrs){
                 bufPtr->read();
@@ -175,8 +175,8 @@ void gpu_engine::main(void *thread_par) {
 
         /** print layers time profile information to console and to file*/ 
         if (this->dnn_ptr->detailed_profile) {
-        gProfiler.printLayerTimes();
-        gProfiler.generateEvalJSON ((this->name + ".json"));
+            gProfiler.printLayerTimes();
+            gProfiler.generateEvalJSON ((this->name + ".json"));
         }
     }
 

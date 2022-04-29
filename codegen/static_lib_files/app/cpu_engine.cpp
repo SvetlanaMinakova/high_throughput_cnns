@@ -78,7 +78,7 @@ void cpu_engine::main(void *thread_par) {
                 updateLocks.push_back(std::move(lock));
             }
 	
-	     ///////////////////
+	        ///////////////////
             // perform reading
             for (auto bufPtr: inputBufferPtrs){
                 bufPtr->read();

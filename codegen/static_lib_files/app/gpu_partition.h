@@ -67,17 +67,13 @@ public:
 
   int INPUT_C = 1;
   int INPUT_H = 1; 
-  int INPUT_W = 1; 
+  int INPUT_W = 1;
 
   int OUTPUT_C = 1;
   int OUTPUT_H = 1; 
   int OUTPUT_W = 1; 
 
   int OUTPUT_SIZE = OUTPUT_C * OUTPUT_H * OUTPUT_W;
-
-  //FIFO sizes
-  int IP0_fifo_size = 1;
-  int OP0_fifo_size = 1;
 
   //GPU detailed profiling
   bool detailed_profile = false;
