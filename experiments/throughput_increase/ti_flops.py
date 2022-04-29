@@ -23,7 +23,7 @@ def increase_dnn_throughput(dnn, architecture, built_in_ops, ga_conf_path=None, 
     """
 
     # imports
-    from DSE.eval_table.builders.flops_et_builder import build_flops_time_eval_table
+    from DSE.latency_eval_table.builders.flops_et_builder import build_flops_time_eval_table
     from converters.dnn_to_task_graph import dnn_to_task_graph
     from DSE.mapping.ga import GA
     from DSE.mapping.greedy_mapping import map_greedy

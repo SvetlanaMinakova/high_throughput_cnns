@@ -17,16 +17,16 @@ def build_time_eval_matrix_from_lut(dnn, app_graph, architecture, lut_file_per_p
     """
     if lut_file_per_proc_type is None:
         if verbose:
-            print("Throughput eval_table: no LUT is specified as input_examples. Random execution times are used.")
+            print("Throughput latency_eval_table: no LUT is specified as input_examples. Random execution times are used.")
 
-        from DSE.eval_table.builders.moc_et_builder import get_moc_eval_table
+        from DSE.latency_eval_table.builders.moc_et_builder import get_moc_eval_table
         eval_matrix = get_moc_eval_table(app_graph, architecture, acceleration_per_proc_type={})
         return eval_matrix
 
     # build lookup tables per processor
     luts = build_luts_per_processor(lut_file_per_proc_type)
 
-    # init eval_table matrix
+    # init latency_eval_table matrix
     eval_matrix = []
     # dummy execution times in case luts are missing for some of the processors
     moc_gpu_time = 1
@@ -36,7 +36,7 @@ def build_time_eval_matrix_from_lut(dnn, app_graph, architecture, lut_file_per_p
         if proc_type not in luts.keys():
             dummy_time = moc_gpu_time
             if verbose:
-                print("Throughput eval_table: no LUT file found for processor '" + proc_type +
+                print("Throughput latency_eval_table: no LUT file found for processor '" + proc_type +
                       "' Dummy exec. time of " + str(dummy_time) + " ms is used instead.")
             proc_eval = create_dummy_eval_matrix_row(len(dnn.get_layers()), dummy_time)
 
@@ -66,11 +66,11 @@ def build_luts_per_processor(lut_file_per_proc_type: {}):
 
 def create_eval_matrix_row_from_lut(dnn, lut:LUTTree, verbose=True):
     """
-    Create a dummy row for eval_table matrix
+    Create a dummy row for latency_eval_table matrix
     :param lut: lookup table, represented as a tree and containing per-layer performance estimation of CNN layer,
     executed on a target platform
     :param verbose: verbose
-    :return: dummy row for eval_table matrix
+    :return: dummy row for latency_eval_table matrix
     """
     eval_row = []
     # TODO: extend!
@@ -81,7 +81,7 @@ def create_eval_matrix_row_from_lut(dnn, lut:LUTTree, verbose=True):
             lut_tree_node = lut.find_lut_tree_node(layer)
             if lut_tree_node is None:
                 if verbose:
-                    print("Throughput eval_table: cannot find record for layer: ", layer)
+                    print("Throughput latency_eval_table: cannot find record for layer: ", layer)
             else:
                 layer_time = lut_tree_node.val
         eval_row.append(layer_time)
@@ -91,8 +91,8 @@ def create_eval_matrix_row_from_lut(dnn, lut:LUTTree, verbose=True):
 
 def create_dummy_eval_matrix_row(row_len, dummy_value):
     """
-    Create a dummy row for eval_table matrix
-    :return: dummy row for eval_table matrix
+    Create a dummy row for latency_eval_table matrix
+    :return: dummy row for latency_eval_table matrix
     """
     dummy_row = [dummy_value for _ in range(row_len)]
     return dummy_row
@@ -100,7 +100,7 @@ def create_dummy_eval_matrix_row(row_len, dummy_value):
 
 def create_empty_eval_matrix(architecture, app_graph, gpu_type_id):
     """
-    Create an empty eval_table matrix, initialized with dummy values
+    Create an empty latency_eval_table matrix, initialized with dummy values
     :param app_graph application graph
     :param architecture target platform architecture
     Otherwise, dnn is scheduled sequentially

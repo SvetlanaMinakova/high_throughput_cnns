@@ -3,7 +3,7 @@ import json
 
 def unmerge(names, complexities, times):
     """
-    Unmerge times evaluation for trt eval_table times
+    Unmerge times evaluation for trt latency_eval_table times
     """
     unmerged_names = []
     unmerged_times = []

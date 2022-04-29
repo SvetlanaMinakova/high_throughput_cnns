@@ -85,6 +85,6 @@ def get_gpu_eval(task_name, gpu_eval_names, proc_eval):
         # evaluation name contains task name in middle/end part: this task was merged with other task and its time == 0
         if task_name in gpu_eval_name:
             return 0.0
-    # nothing found: return zero-eval_table by default
+    # nothing found: return zero-latency_eval_table by default
     return 0.0
 

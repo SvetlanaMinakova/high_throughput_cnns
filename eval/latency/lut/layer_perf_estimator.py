@@ -15,7 +15,7 @@ def estim_layer_lut(layer, lut: LUTTree):
         eval_node = lut.find_lut_tree_node(layer)
         eval_lut = eval_node.children[0].val
     except Exception:
-        print("eval_table for layer: ", layer, " not found in LUT.")
+        print("latency_eval_table for layer: ", layer, " not found in LUT.")
     return eval_lut
 
 

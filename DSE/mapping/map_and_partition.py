@@ -117,8 +117,8 @@ def get_time_eval_table(dnn, dnn_task_graph, architecture, eval_type="flops", ev
     :return: per-layer execution time (latency) evaluation matrix
     """
     # imports
-    from DSE.eval_table.builders.flops_et_builder import build_flops_time_eval_table
-    from DSE.eval_table.builders.direct_measurements_et_builder import build_eval_table
+    from DSE.latency_eval_table.builders.flops_et_builder import build_flops_time_eval_table
+    from DSE.latency_eval_table.builders.direct_measurements_et_builder import build_eval_table
 
     if eval_type == "measurements":
         if eval_path is None:

@@ -23,7 +23,7 @@ def main():
     from util import print_stage
     from converters.json_converters.json_to_architecture import json_to_architecture
     from DSE.mapping.map_and_partition import get_mapping
-    from DSE.eval_table.builders.direct_measurements_et_builder import build_eval_table
+    from DSE.latency_eval_table.builders.direct_measurements_et_builder import build_eval_table
     from converters.json_converters.json_task_graph import parse_task_graph_json
     from converters.json_converters.mapping_to_json import mapping_to_json
     from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis

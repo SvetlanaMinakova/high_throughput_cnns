@@ -19,7 +19,7 @@ def increase_dnn_throughput(dnn_name, architecture, task_graph_path, eval_path, 
     """
 
     # imports
-    from DSE.eval_table.builders.direct_measurements_et_builder import build_eval_table
+    from DSE.latency_eval_table.builders.direct_measurements_et_builder import build_eval_table
     from converters.json_converters.json_task_graph import parse_task_graph_json
     from DSE.mapping.ga import GA
     from DSE.mapping.greedy_mapping import map_greedy

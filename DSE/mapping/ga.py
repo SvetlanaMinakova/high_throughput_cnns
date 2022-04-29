@@ -1,5 +1,5 @@
 from DSE.mapping.chromosome import Chromosome
-from DSE.eval_table.additional.communication_penalty import get_communication_penalty
+from DSE.latency_eval_table.additional.communication_penalty import get_communication_penalty
 import operator
 import random
 from models.TaskGraph import TaskGraph
@@ -145,7 +145,7 @@ class GA:
             best.print_short()
             fin_eval = best.eval_time(self.architecture.processors_types, self.architecture.processors_types_distinct, self.time_eval_matrix)
             if self.verbose:
-                print("fin eval_table time: ", fin_eval)
+                print("fin latency_eval_table time: ", fin_eval)
         return best.mapping
         # return partitions
 

@@ -104,7 +104,7 @@ def test():
         layer_id = get_layer_id(eval, app_graph)
         layer = app_graph.jobs_per_task[layer_id]
         group = get_group(layer, grouped_convs)
-        # print(eval_table, "corresponds to layer", layer)
+        # print(latency_eval_table, "corresponds to layer", layer)
         original_time = gpu_time[eval_id]
         time = original_time/group
         time = time/10
