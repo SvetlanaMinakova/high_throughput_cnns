@@ -49,6 +49,9 @@ def main():
 def run_test_step(step: str, info_level):
     from tests.test_config import get_test_config
     config = get_test_config()
+    if step == "parse_inputs":
+        result = parse_inputs(config, info_level)
+        return result
 
     if step == "dnn_to_sdf":
         result = run_dnn_to_sdf_task_graph(config, info_level)
@@ -67,6 +70,122 @@ def run_test_step(step: str, info_level):
         return result
 
     raise Exception("Unknown tests step: " + step)
+
+
+def parse_inputs(config: {}, info_level):
+    """
+    Parse toolflow inputs: dnn models and target platform architecture
+        in all supported formats
+    :param config: test config (see ../test_config.py) used
+        by subsequent scripts of the tool
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    if info_level > 0:
+        print("Parse toolflow inputs (dnn models and target platform architecture)")
+    dnn_parsed = parse_dnn(config, info_level)
+    platform_parsed = parse_platform_architecture(config, info_level)
+    test_passed = dnn_parsed and platform_parsed
+    if info_level > 0:
+        if test_passed:
+            print("TEST PASSED")
+        else:
+            print("TEST FAILED")
+    return test_passed
+
+
+def parse_dnn(config: {}, info_level):
+    """ try to parse input dnns of available formats
+    :param config: test config (see ../test_config.py) used
+        by subsequent scripts of the tool
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    try:
+        dnn_from_onnx_parsed = parse_dnn_with_extension(config["cnn_onnx"], "onnx", info_level, "test_cnn_onnx")
+        dnn_from_json_parsed = parse_dnn_with_extension(config["cnn_json"], "json", info_level, "test_cnn_json")
+        test_passed = dnn_from_onnx_parsed and dnn_from_json_parsed
+    except Exception as e:
+        test_passed = False
+    return test_passed
+
+
+def parse_platform_architecture(config: {}, info_level):
+    """ try to parse target platform architecture in all supported formats
+    :param config: test config (see ../test_config.py) used
+        by subsequent scripts of the tool
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    from converters.json_converters.json_to_architecture import json_to_architecture
+    test_passed = True
+    if info_level > 0:
+        print("  Parse target platform architecture ( json )")
+    try:
+        arch_parsed = json_to_architecture(config["platform"])
+        if arch_parsed is None:
+            test_passed = False
+    except Exception as e:
+        test_passed = False
+
+    if info_level > 0:
+        if test_passed:
+            print("  - SUCCESS")
+        else:
+            print("  - FAILURE")
+    return test_passed
+
+
+def parse_dnn_with_extension(dnn_path: str, dnn_extension: str, info_level, dnn_name="test_dnn"):
+    """ Check if dnn can be parsed
+    :param dnn_path: full path to dnn
+    :param dnn_extension: target dnn extension
+    :param dnn_name: target dnn name
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
+
+    if info_level > 0:
+        print("  Parse DNN (", dnn_extension, ")")
+    test_passed = True
+
+    try:
+        verbose = info_level > 1
+        dnn = load_or_build_dnn_for_analysis(dnn_path, dnn_name, verbose)
+        if dnn is None:
+            test_passed = False
+
+    except Exception as e:
+        test_passed = False
+
+    if info_level > 0:
+        if test_passed:
+            print("  - SUCCESS")
+        else:
+            print("  - FAILURE")
+
+    return test_passed
 
 
 def run_dnn_to_sdf_task_graph(config: {}, info_level):
@@ -89,7 +208,7 @@ def run_dnn_to_sdf_task_graph(config: {}, info_level):
     script_root = get_project_root()
     script_name = "dnn_to_sdf_task_graph"
     input_param = {
-        "--cnn": config["cnn"],
+        "--cnn": config["cnn_json"],
         "-o": config["intermediate_files_folder_abs"],
         "-fo": 'activation,normalization,arithmetic,skip'
     }
@@ -154,7 +273,7 @@ def run_sdf_latency_eval_template(config, info_level):
     if info_level > 0:
         print("  PART 2: FLOPS-based eval template")
     input_param = {
-        "--cnn": config["cnn"],
+        "--cnn": config["cnn_json"],
         "-tg": str(os.path.join(config["intermediate_files_folder_abs"], "task_graph.json")),
         "-p": config["platform"],
         "-o": config["intermediate_files_folder_abs"]
@@ -201,7 +320,7 @@ def run_generate_mapping(config, info_level):
     if info_level > 0:
         print("  PART 1: greedy mapping")
     input_param = {
-        "--cnn": config["cnn"],
+        "--cnn": config["cnn_json"],
         "-tg": str(os.path.join(config["intermediate_files_folder_abs"], "task_graph.json")),
         "-p": config["platform"],
         "-o": config["intermediate_files_folder_abs"],
@@ -224,7 +343,7 @@ def run_generate_mapping(config, info_level):
         print("  PART 2: GA-based mapping")
 
     input_param = {
-        "--cnn": config["cnn"],
+        "--cnn": config["cnn_json"],
         "-tg": str(os.path.join(config["intermediate_files_folder_abs"], "task_graph.json")),
         "-p": config["platform"],
         "-o": config["intermediate_files_folder_abs"],
@@ -267,7 +386,7 @@ def run_generate_final_app(config, info_level):
     script_root = get_project_root()
     script_name = "generate_final_app_model"
     input_param = {
-        "--cnn": config["cnn"],
+        "--cnn": config["cnn_json"],
         "-tg": str(os.path.join(config["intermediate_files_folder_abs"], "task_graph.json")),
         "-p": config["platform"],
         "-m": str(os.path.join(config["intermediate_files_folder_abs"], "mapping.json")),

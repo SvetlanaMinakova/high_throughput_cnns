@@ -64,7 +64,8 @@ def run_integration_test(info_level):
     if info_level > 0:
         print("RUN INTEGRATION TEST")
     # steps (scripts) in execution order
-    steps = ["dnn_to_sdf",
+    steps = ["parse_inputs",
+             "dnn_to_sdf",
              "sdf_latency_eval_template",
              "generate_mapping",
              "generate_final_app"]

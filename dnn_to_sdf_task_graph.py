@@ -22,12 +22,11 @@ def main():
 
     # import project modules
     from dnn_builders.input_dnn_manager import load_or_build_dnn_for_analysis
-    from converters.dnn_to_task_graph import dnn_to_task_graph, dnn_to_task_graph_with_built_in
+    from converters.dnn_to_task_graph import dnn_to_task_graph
     from converters.json_converters.json_task_graph import save_task_graph_as_json
     from models.dnn_model.dnn import set_built_in
     from models.dnn_model.transformation.ops_fusion import fuse_built_in
-    from util import get_project_root, print_stage
-    from converters.json_converters.json_to_architecture import json_to_architecture
+    from util import print_stage
 
     # general arguments
     parser = argparse.ArgumentParser(description='The script converts an input CNN (in supported input format) into a '
