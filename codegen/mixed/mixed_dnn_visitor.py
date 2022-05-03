@@ -91,7 +91,7 @@ def visit_dnn_app(dnn: DNN,
                                                  arm_cl=True,
                                                  trt=True)
 
-    copy_static_app_code(code_dir)
+    copy_static_app_code(code_dir, verbose=verbose)
     if verbose:
         print("Mixed (TensorRT GPU + ARM-CL CPU) code is generated in", code_dir)
 

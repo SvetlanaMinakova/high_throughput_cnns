@@ -68,7 +68,7 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
                                                  cpu_partition_class_names,
                                                  arm_cl=True,
                                                  trt=False)
-    copy_static_app_code(code_dir)
+    copy_static_app_code(code_dir, verbose=verbose)
     if verbose:
         print("ARM-CL (CPU) code is generated in", code_dir)
 
@@ -125,7 +125,7 @@ def visit_dnn_partitioned(dnn_partitions: [DNN],
                                                  cpu_partition_class_names,
                                                  arm_cl=True, trt=False)
 
-    copy_static_app_code(code_dir)
+    copy_static_app_code(code_dir, verbose=verbose)
     if verbose:
         print("ARM-CL (CPU) partitioned code is generated in", code_dir)
 

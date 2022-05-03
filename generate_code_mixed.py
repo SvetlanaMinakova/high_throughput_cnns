@@ -86,7 +86,7 @@ def main():
         stage = "Generating mixed ARM-CL (CPU) + TensorRT (GPU) code"
         print_stage(stage, verbose)
         code_folder = output_dir + "/code/mixed"
-        visit_dnn_app(dnn, dnn_inf_model, code_folder)
+        visit_dnn_app(dnn, dnn_inf_model, code_folder, verbose)
 
     except Exception as e:
         print("Mixed (ARM-CL CPU + TensorRT GPU) code generation error: " + str(e))

@@ -59,7 +59,7 @@ def visit_dnn(dnn: DNN, code_dir, verbose=True):
                                                  cpu_partition_class_names,
                                                  arm_cl=False, trt=True)
 
-    copy_static_app_code(code_dir)
+    copy_static_app_code(code_dir, verbose=verbose)
     if verbose:
         print("TensorRT code is generated in", code_dir)
 
@@ -109,7 +109,7 @@ def visit_dnn_partitioned(dnn_partitions: [DNN],
                                                  cpu_partition_class_names,
                                                  arm_cl=False, trt=True)
 
-    copy_static_app_code(code_dir)
+    copy_static_app_code(code_dir, verbose=verbose)
     if verbose:
         print("TensorRT code is generated in", code_dir)
 

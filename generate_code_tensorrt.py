@@ -108,7 +108,7 @@ def main():
             stage = "Generating TensorRT (GPU) code"
             print_stage(stage, verbose)
             code_folder = output_dir + "/code/gpu"
-            codegen.tensorrt.tensorrt_dnn_visitor.visit_dnn(dnn, code_folder)
+            codegen.tensorrt.tensorrt_dnn_visitor.visit_dnn(dnn, code_folder, verbose)
 
     except Exception as e:
         print("TensorRT (GPU) code generation error: " + str(e))

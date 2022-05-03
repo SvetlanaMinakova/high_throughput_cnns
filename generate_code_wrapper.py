@@ -106,7 +106,7 @@ def main():
         stage = "Generating wrapper code"
         print_stage(stage, verbose)
         code_folder = output_dir + "/code/wrapper"
-        visit_dnn_app(dnn, dnn_inf_model, code_folder, time_per_subnet)
+        visit_dnn_app(dnn, dnn_inf_model, code_folder, time_per_subnet, verbose=verbose)
 
     except Exception as e:
         print("Wrapper code generation error: " + str(e))

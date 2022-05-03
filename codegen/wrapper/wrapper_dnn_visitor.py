@@ -62,7 +62,7 @@ def visit_dnn_app(dnn: DNN,
     codegen.wrapper.wrapper_makefile_generator.generate_makefile(code_dir, class_names_in_exec_order)
     # copy static code files
     static_code_path = "codegen/static_lib_files/wrapper"
-    copy_static_app_code(code_dir, static_code_path)
+    copy_static_app_code(code_dir, static_code_path, verbose)
     if verbose:
         print("Code wrapper is generated in", code_dir)
 

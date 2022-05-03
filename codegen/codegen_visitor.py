@@ -38,11 +38,12 @@ class CodegenVisitor:
         self.write_line("using namespace " + namespace + ";")
 
 
-def copy_static_app_code(target_dir, lib_files_dir="codegen/static_lib_files/app"):
+def copy_static_app_code(target_dir, lib_files_dir="codegen/static_lib_files/app", verbose=True):
     """
     Copy static (hand-written, DNN-independent) code for ARM-CL/TRT code execution
     :param target_dir: target code directory
     :param lib_files_dir: directory with static code files to copy
+    :param verbose: report into console after files are copied
     """
     static_files_dir = os.path.join(str(get_project_root()), lib_files_dir)
     if os.path.exists(static_files_dir):
@@ -50,9 +51,10 @@ def copy_static_app_code(target_dir, lib_files_dir="codegen/static_lib_files/app
             src = os.path.join(static_files_dir, the_file)
             dst = os.path.join(target_dir, the_file)
             copyfile(src, dst)
-        print("Static files successfully copied")
-        print(" - from " + static_files_dir)
-        print(" - to " + target_dir)
+        if verbose:
+            print("Static files successfully copied")
+            print(" - from " + static_files_dir)
+            print(" - to " + target_dir)
     else:
         print("WARNING: codegen: no static lib files copied. ")
         print("reason: I could not find static files directory: " + static_files_dir)
