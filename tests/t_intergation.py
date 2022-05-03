@@ -68,7 +68,8 @@ def run_integration_test(info_level):
              "dnn_to_sdf",
              "sdf_latency_eval_template",
              "generate_mapping",
-             "generate_final_app"]
+             "generate_final_app",
+             "generate_code"]
     for step in steps:
         step_executed = run_test_step(step, info_level)
         if step_executed is False:

@@ -69,6 +69,10 @@ def run_test_step(step: str, info_level):
         result = run_generate_final_app(config, info_level)
         return result
 
+    if step == "generate_code":
+        result = run_generate_code(config, info_level)
+        return result
+
     raise Exception("Unknown tests step: " + step)
 
 
@@ -338,9 +342,9 @@ def run_generate_mapping(config, info_level):
                                                output_file_abs_paths,
                                                info_level)
 
-    # PART 1 (GA-BASED)
+    # PART 2 (GA-BASED)
     if info_level > 0:
-        print("  PART 2: GA-based mapping")
+        print("  PART 2: GA-based mapping (may take a while)")
 
     input_param = {
         "--cnn": config["cnn_json"],
@@ -398,6 +402,284 @@ def run_generate_final_app(config, info_level):
 
     output_files = ["app.json"]
     output_file_abs_paths = [str(os.path.join(config["intermediate_files_folder_abs"], f)) for f in output_files]
+    test_passed = run_script_and_check_output(script_root,
+                                              script_name,
+                                              input_param,
+                                              flags,
+                                              output_file_abs_paths,
+                                              info_level)
+    return test_passed
+
+
+def run_generate_code(config, info_level):
+    """ Run generate_code* scripts
+    :param config: test config (see ../test_config.py) used
+        by subsequent scripts of the tool
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    if info_level > 0:
+        print("GENERATE code")
+
+    print_prefix = "  "
+    wrapper_code_generated = run_generate_code_wrapper(config, info_level, print_prefix)
+    cpu_code_generated = run_generate_code_arm_cl(config, info_level, print_prefix)
+    gpu_code_generated = run_generate_code_tensorrt(config, info_level, print_prefix)
+    mixed_code_generated = run_generate_code_mixed(config, info_level, print_prefix)
+    test_passed = wrapper_code_generated and cpu_code_generated and gpu_code_generated and mixed_code_generated
+    return test_passed
+
+
+def run_generate_code_wrapper(config, info_level, print_prefix="  "):
+    """ Run generate_code_wrapper script
+    :param config: test config (see ../test_config.py) used
+        by subsequent scripts of the tool
+    :param print_prefix: space before printout statements printed to the console
+        during the tests execution
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    if info_level > 0:
+        print(print_prefix, "GENERATE wrapper code")
+
+    output_files = ["appMain.cpp", "Makefile", "SharedBuffer.h"]
+    output_file_abs_paths = [str(os.path.join(config["intermediate_files_folder_abs"], "code", "wrapper", f)) for f in output_files]
+
+    # import project modules
+    from util import get_project_root
+    script_root = get_project_root()
+    script_name = "generate_code_wrapper"
+
+    # PART 1 (UNTIMED)
+    if info_level > 0:
+        print(print_prefix, "PART 1: Untimed")
+    input_param = {
+        "--cnn": config["cnn_json"],
+        "-a": str(os.path.join(config["intermediate_files_folder_abs"], "app.json")),
+        "-o": config["intermediate_files_folder_abs"]
+    }
+    flags = []
+    if info_level < 2:
+        flags.append("--silent")
+
+    test1_passed = run_script_and_check_output(script_root,
+                                               script_name,
+                                               input_param,
+                                               flags,
+                                               output_file_abs_paths,
+                                               info_level)
+
+    # PART 2 (TIMED)
+    if info_level > 0:
+        print(print_prefix, "PART 2: Timed")
+
+    input_param = {
+        "--cnn": config["cnn_json"],
+        "-a": str(os.path.join(config["intermediate_files_folder_abs"], "app.json")),
+        "-o": config["intermediate_files_folder_abs"],
+        "-e": str(os.path.join(config["intermediate_files_folder_abs"], "eval_template.json")),
+    }
+    flags = []
+    if info_level < 2:
+        flags.append("--silent")
+
+    test2_passed = run_script_and_check_output(script_root,
+                                               script_name,
+                                               input_param,
+                                               flags,
+                                               output_file_abs_paths,
+                                               info_level)
+
+    test_passed = test1_passed and test2_passed
+    return test_passed
+
+
+def run_generate_code_arm_cl(config, info_level, print_prefix="  "):
+    """ Run generate_code_arm_cl script
+    :param config: test config (see ../test_config.py) used
+        by subsequent scripts of the tool
+    :param print_prefix: space before printout statements printed to the console
+        during the tests execution
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    if info_level > 0:
+        print(print_prefix, "GENERATE ARM-CL (CPU) code")
+
+    output_files = ["appMain.cpp", "Makefile", "SharedBuffer.h"]
+    output_file_abs_paths1 = [str(os.path.join(config["intermediate_files_folder_abs"], "code",
+                                               "cpu", f)) for f in output_files]
+    output_file_abs_paths2 = [str(os.path.join(config["intermediate_files_folder_abs"], "code",
+                                               "cpu_partitioned", f)) for f in output_files]
+
+    # import project modules
+    from util import get_project_root
+    script_root = get_project_root()
+    script_name = "generate_code_arm_cl"
+
+    # PART 1 (Whole)
+    if info_level > 0:
+        print(print_prefix, "PART 1: Whole")
+    input_param = {
+        "--cnn": config["cnn_json"],
+        "-o": config["intermediate_files_folder_abs"]
+    }
+    flags = []
+    if info_level < 2:
+        flags.append("--silent")
+
+    test1_passed = run_script_and_check_output(script_root,
+                                               script_name,
+                                               input_param,
+                                               flags,
+                                               output_file_abs_paths1,
+                                               info_level)
+
+    # PART 2 (Partitioned)
+    if info_level > 0:
+        print(print_prefix, "PART 2: Split into partitions (sub-networks) using task graph (BENCHMARK/DEBUG MODE)")
+
+    input_param = {
+        "--cnn": config["cnn_json"],
+        "-tg": str(os.path.join(config["intermediate_files_folder_abs"], "task_graph.json")),
+        "-o": config["intermediate_files_folder_abs"]
+    }
+    flags = ["--partitioned"]
+    if info_level < 2:
+        flags.append("--silent")
+
+    test2_passed = run_script_and_check_output(script_root,
+                                               script_name,
+                                               input_param,
+                                               flags,
+                                               output_file_abs_paths2,
+                                               info_level)
+
+    test_passed = test1_passed and test2_passed
+    return test_passed
+
+
+def run_generate_code_tensorrt(config, info_level, print_prefix="  "):
+    """ Run generate_code_tensorrt script
+    :param config: test config (see ../test_config.py) used
+        by subsequent scripts of the tool
+    :param print_prefix: space before printout statements printed to the console
+        during the tests execution
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    if info_level > 0:
+        print(print_prefix, "GENERATE TensorRT (GPU) code")
+
+    output_files = ["appMain.cpp", "Makefile", "SharedBuffer.h"]
+    output_file_abs_paths1 = [str(os.path.join(config["intermediate_files_folder_abs"], "code",
+                                               "gpu", f)) for f in output_files]
+    output_file_abs_paths2 = [str(os.path.join(config["intermediate_files_folder_abs"], "code",
+                                               "gpu_partitioned", f)) for f in output_files]
+
+    # import project modules
+    from util import get_project_root
+    script_root = get_project_root()
+    script_name = "generate_code_tensorrt"
+
+    # PART 1 (Whole)
+    if info_level > 0:
+        print(print_prefix, "PART 1: Whole")
+    input_param = {
+        "--cnn": config["cnn_json"],
+        "-o": config["intermediate_files_folder_abs"]
+    }
+    flags = []
+    if info_level < 2:
+        flags.append("--silent")
+
+    test1_passed = run_script_and_check_output(script_root,
+                                               script_name,
+                                               input_param,
+                                               flags,
+                                               output_file_abs_paths1,
+                                               info_level)
+
+    # PART 2 (Partitioned)
+    if info_level > 0:
+        print(print_prefix, "PART 2: Split into partitions (sub-networks) using task graph (DEBUG MODE)")
+
+    input_param = {
+        "--cnn": config["cnn_json"],
+        "-tg": str(os.path.join(config["intermediate_files_folder_abs"], "task_graph.json")),
+        "-o": config["intermediate_files_folder_abs"]
+    }
+    flags = ["--partitioned"]
+    if info_level < 2:
+        flags.append("--silent")
+
+    test2_passed = run_script_and_check_output(script_root,
+                                               script_name,
+                                               input_param,
+                                               flags,
+                                               output_file_abs_paths2,
+                                               info_level)
+
+    test_passed = test1_passed and test2_passed
+    return test_passed
+
+
+def run_generate_code_mixed(config, info_level, print_prefix="  "):
+    """ Run generate_code_mixed script
+    :param config: test config (see ../test_config.py) used
+        by subsequent scripts of the tool
+    :param print_prefix: space before printout statements printed to the console
+        during the tests execution
+    :param info_level: amount of information to print out during the tests run.
+        If info-level == 0, no information is printed to console.
+        If info-level == 1, only tests information (e.g., which steps of the tests were successful)
+        is printed to console.
+        If info-level == 2, tests information (e.g., which steps of the tests were successful)
+        as well as script-specific verbose output is printed to the console
+    :return: True if tests ran successfully and False otherwise
+    """
+    if info_level > 0:
+        print(print_prefix, "GENERATE mixed ARM-CL (CPU) + TensorRT (GPU) code "
+                            "with partitioning and mapping based on final CSDF app")
+
+    output_files = ["appMain.cpp", "Makefile", "SharedBuffer.h"]
+    output_file_abs_paths = [str(os.path.join(config["intermediate_files_folder_abs"],
+                                              "code", "mixed", f)) for f in output_files]
+
+    # import project modules
+    from util import get_project_root
+    script_root = get_project_root()
+    script_name = "generate_code_mixed"
+
+    input_param = {
+        "--cnn": config["cnn_json"],
+        "-a": str(os.path.join(config["intermediate_files_folder_abs"], "app.json")),
+        "-o": config["intermediate_files_folder_abs"]
+    }
+    flags = []
+    if info_level < 2:
+        flags.append("--silent")
+
     test_passed = run_script_and_check_output(script_root,
                                               script_name,
                                               input_param,
